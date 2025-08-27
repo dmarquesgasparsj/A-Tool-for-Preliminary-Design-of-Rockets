@@ -1,3 +1,4 @@
+
 # MATLAB Toolkit — Preliminary Rocket Design (Multi-Stage + Gravity Turn)
 
 **Language:** English  
@@ -33,5 +34,3 @@
 
 ---
 This toolkit stems from the author's Master's thesis available at: <https://fenix.tecnico.ulisboa.pt/cursos/meaer/dissertacao/2353642467857>.
-
-Diogo, feel free to adjust the configurations (Isp, thrust levels, structural fractions, propellant masses, `CdA`) with data from your thesis — field names are commented to match common practices.
