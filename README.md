@@ -3,7 +3,7 @@
 **Idioma:** Português (PT-PT)  
 **Objetivo:** Estimar massas, dimensões e *payload ratio* para foguetões multi‑estágio, incluindo simulação de *gravity turn* 2D e iteração simples entre **trajetória** e **configuração**.
 
-> ⚠️ **Nota importante**: Estes modelos são preliminares/simplificados e usam aproximações (atmosfera exponencial, arrasto constante por estágio, controlo de *pitch* simplificado, queima por estágios em série, sem boosters laterais). São úteis para *trade‑offs* iniciais e sensibilidades, **não** para verificação de voo.
+**Nota importante**: Estes modelos são preliminares/simplificados e usam aproximações (atmosfera exponencial, arrasto constante por estágio, controlo de *pitch* simplificado, queima por estágios em série, sem boosters laterais). São úteis para *trade‑offs* iniciais e sensibilidades, **não** para verificação de voo.
 
 ## Como usar
 1. Abrir o `main.m` no MATLAB/Octave.
@@ -29,7 +29,3 @@
 ## Resultados esperados
 - Estimativa de massa de descolagem, *payload ratio* e histórico temporal (altitude, velocidade, ângulo).
 - Base para comparar configurações (alterando ficheiros em `configs/`) e fazer *what‑if* nos parâmetros.
-
----
-
-Diogo, ajusta livremente as configurações (Isp, empuxos, fracções estruturais, massas de propelente, `CdA`) com os dados da tua tese — os nomes de campos estão comentados para corresponder a práticas correntes.
