@@ -1,31 +1,36 @@
-# Toolkit MATLAB — Preliminary Rocket Design (Multi‑Estágio + Gravity Turn)
 
-**Idioma:** Português (PT-PT)  
-**Objetivo:** Estimar massas, dimensões e *payload ratio* para foguetões multi‑estágio, incluindo simulação de *gravity turn* 2D e iteração simples entre **trajetória** e **configuração**.
+# MATLAB Toolkit — Preliminary Rocket Design (Multi-Stage + Gravity Turn)
 
-**Nota importante**: Estes modelos são preliminares/simplificados e usam aproximações (atmosfera exponencial, arrasto constante por estágio, controlo de *pitch* simplificado, queima por estágios em série, sem boosters laterais). São úteis para *trade‑offs* iniciais e sensibilidades, **não** para verificação de voo.
+**Language:** English  
+**Purpose:** Estimate masses, dimensions and payload ratio for multi-stage rockets, including a 2D gravity turn simulation and simple iteration between **trajectory** and **configuration**.
 
-## Como usar
-1. Abrir o `main.m` no MATLAB/Octave.
-2. Escolher a configuração em `main.m` (e.g., `demo_config` ou criar uma em `configs/`).
-3. Executar o `main.m`. O script vai:
-   - Carregar a configuração do lançador e parâmetros de missão.
-   - Otimizar (por defeito) a trajetória básica (tempo do *pitch* e *kick*).
-   - Procurar, por bisseção, a **carga útil máxima** que ainda atinge a órbita-alvo.
-   - Reportar o *payload ratio* (= m_payload / m0) e gráficos de altitude/velocidade.
+> ⚠️ **Important note:** These models are preliminary/simplified and rely on approximations (exponential atmosphere, constant drag per stage, simplified pitch control, sequential stage burns without side boosters). They are useful for initial trade-offs and sensitivity studies, **not** for flight verification.
 
-## Pastas
-- `configs/` — ficheiros com parâmetros por lançador (ex.: `demo_config.m`).  
-  Crie variantes (ex.: `vega_config.m`, `protonkdm3_config.m`, `ariane5_config.m`) editando *Isp*, *thrust*, massas estruturais, massas de propelente, `CdA`, etc.
-- `util/` — funções auxiliares.
+## How to use
+1. Open `main.m` in MATLAB/Octave.
+2. Choose the configuration in `main.m` (e.g., `demo_config` or create one in `configs/`).
+3. Run `main.m`. The script will:
+   - Show a small GUI asking for the desired payload mass and target orbit altitude.
+   - Load the launcher configuration and mission parameters.
+   - Optimize (by default) the basic trajectory (pitch timing and kick).
+   - Search, by bisection, for the **maximum payload** that still reaches the target orbit.
+   - Report the payload ratio (= m_payload / m0) and provide altitude/velocity plots.
 
-## Limitações principais
-- ISA simplificada (exponencial, altura de escala fixa).
-- Arrasto modelado via `CdA` constante por estágio.
-- Direção do impulso: vertical até `t_pitch`; janela curta de *pitch kick*; depois *gravity turn* com *thrust* alinhado com a velocidade.
-- Sem modelação de boosters laterais/acoplagens assimétricas.
-- Otimização *sem* toolboxes (usa *grid search* e `fminsearch` quando aplicável).
+## Folders
+- `configs/` — parameter files for each launcher (e.g., `demo_config.m`).  
+  Create variants (e.g., `vega_config.m`, `protonkdm3_config.m`, `ariane5_config.m`) by editing Isp, thrust, structural masses, propellant masses, `CdA`, etc.
+- `util/` — helper functions.
 
-## Resultados esperados
-- Estimativa de massa de descolagem, *payload ratio* e histórico temporal (altitude, velocidade, ângulo).
-- Base para comparar configurações (alterando ficheiros em `configs/`) e fazer *what‑if* nos parâmetros.
+## Main limitations
+- Simplified ISA (exponential, fixed scale height).
+- Drag modeled via constant `CdA` per stage.
+- Thrust direction: vertical until `t_pitch`; short pitch-kick window; then gravity turn with thrust aligned with velocity.
+- No modeling of side boosters/asymmetric attachments.
+- Optimization *without* toolboxes (uses grid search and `fminsearch` when applicable).
+
+## Expected results
+- Estimate of lift-off mass, payload ratio and time histories (altitude, velocity, angle).
+- Basis to compare configurations (by editing files in `configs/`) and perform parameter what-if analyses.
+
+---
+This toolkit stems from the author's Master's thesis available at: <https://fenix.tecnico.ulisboa.pt/cursos/meaer/dissertacao/2353642467857>.
