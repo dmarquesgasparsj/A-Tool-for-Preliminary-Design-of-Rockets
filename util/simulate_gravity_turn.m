@@ -1,10 +1,10 @@
-function traj = simulate_gravity_turn(cfg, mission, traj_params, payload_mass)
+function traj = simulate_gravity_turn(cfg, mission, traj_params, payload)
 % SIMULATE_GRAVITY_TURN — Integra a trajetória 2D por estágios.
 % Entradas:
 %   cfg.stages(i): Isp_s, thrust_N, fs_struct, mp_kg, CdA_m2
 %   mission: target_alt [m], launch_lat [rad], etc.
 %   traj_params: t_pitch [s], pitch_kick [rad], kick_dur [s]
-%   payload_mass: massa da carga útil [kg]
+%   payload: struct com massa (mass_kg) e volume (volume_m3)
 % Saída:
 %   traj: struct com histórico (t, r, theta, vr, vtheta, m, h, v, gamma)
 
@@ -26,7 +26,7 @@ for i=1:N
     stages(i).ms_kg = ms;
 end
 
-m0 = payload_mass + sum([stages.mp_kg]) + sum([stages.ms_kg]);
+m0 = payload.mass_kg + sum([stages.mp_kg]) + sum([stages.ms_kg]);
 
 % Estado inicial
 state = [Re; 0; 0; v0_east; m0];

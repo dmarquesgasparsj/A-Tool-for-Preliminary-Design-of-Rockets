@@ -15,6 +15,7 @@ function cfg = demo_config()
 
 cfg.name = 'DEMO-2S';
 cfg.notes = 'Modelo simplificado, sem boosters.';
+cfg.fairing_volume_m3 = 10; % capacidade máxima da carenagem [m^3]
 
 % Estágio 1 (valores meramente ilustrativos)
 s1.name      = 'Stage 1';
