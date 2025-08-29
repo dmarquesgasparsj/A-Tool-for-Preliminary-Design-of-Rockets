@@ -8,12 +8,26 @@ addpath('configs'); addpath('util');
 prompt   = {'Desired payload mass [kg]', 'Target orbit altitude [km]'};
 dlgtitle = 'Mission setup';
 definput = {'1000', '200'};
-answer   = inputdlg(prompt, dlgtitle, 1, definput);
-if isempty(answer)
-    error('User cancelled input dialog.');
+valid_inputs = false;
+while ~valid_inputs
+    answer = inputdlg(prompt, dlgtitle, 1, definput);
+    if isempty(answer)
+        error('User cancelled input dialog.');
+    end
+    user_payload  = str2double(answer{1});
+    user_orbit_km = str2double(answer{2});
+    if isnan(user_payload) || isnan(user_orbit_km)
+        uiwait(errordlg('Input must be numeric.', 'Invalid input'));
+        definput = answer;
+        continue;
+    end
+    if user_payload <= 0 || user_orbit_km <= 0
+        uiwait(errordlg('Values must be positive.', 'Invalid input'));
+        definput = answer;
+        continue;
+    end
+    valid_inputs = true;
 end
-user_payload = str2double(answer{1});
-user_orbit_km = str2double(answer{2});
 
 %% Mission parameters
 mission.target_alt   = user_orbit_km * 1e3; % Target orbit altitude [m]
