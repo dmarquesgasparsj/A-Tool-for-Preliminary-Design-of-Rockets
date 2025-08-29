@@ -7,9 +7,9 @@ if nargin < 4, opts = struct; end
 if ~isfield(opts, 'verbose'), opts.verbose = false; end
 
 % Busca inicial grosseira na trajetória (grid)
-grid.t_pitch   = linspace(traj_bounds.t_pitch_s(0+1), traj_bounds.t_pitch_s(1), 5);
-grid.kick_deg  = linspace(traj_bounds.pitch_kick_deg(0+1), traj_bounds.pitch_kick_deg(1), 5);
-grid.kick_dur  = linspace(traj_bounds.kick_dur_s(0+1), traj_bounds.kick_dur_s(1), 3);
+grid.t_pitch   = linspace(traj_bounds.t_pitch_s(1), traj_bounds.t_pitch_s(1), 5);
+grid.kick_deg  = linspace(traj_bounds.pitch_kick_deg(1), traj_bounds.pitch_kick_deg(1), 5);
+grid.kick_dur  = linspace(traj_bounds.kick_dur_s(1), traj_bounds.kick_dur_s(1), 3);
 
 best.payload_kg = -Inf; best.traj = struct();
 eval_count = 0;
