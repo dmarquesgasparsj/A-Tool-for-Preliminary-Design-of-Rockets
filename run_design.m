@@ -1,20 +1,20 @@
-function [result, history] = run_design(payload, orbit_alt)
+function [result, history] = run_design(payload, mission)
 %RUN_DESIGN Execute rocket design evaluation without GUI interaction.
-%   [RESULT, HISTORY] = RUN_DESIGN(PAYLOAD, ORBIT_ALT) runs the design
-%   evaluation for a desired PAYLOAD mass [kg] and target orbit altitude
-%   ORBIT_ALT [km]. The routine reports feasibility, prints a summary,
-%   plots the best trajectory and saves results to 'last_run.mat'.
+%   [RESULT, HISTORY] = RUN_DESIGN(PAYLOAD, MISSION) runs the design
+%   evaluation for a desired PAYLOAD mass [kg] and mission structure
+%   MISSION (requires subfield .orbit). The routine reports feasibility,
+%   prints a summary, plots the best trajectory and saves results to
+%   'last_run.mat'.
 
 % Housekeeping and paths
 clc; close all;
 addpath('configs');
 addpath('util');
 
-%% Mission parameters
-mission.target_alt   = orbit_alt * 1e3; % Target orbit altitude [m]
-mission.inclination  = 0.0;             % [rad] — not used in this 2D model
-mission.launch_lat   = deg2rad(38.65);  % Launch site latitude (e.g., Lisbon)
-mission.east_azimuth = 0;               % 0 => East; flight to the East
+%% Mission parameters (defaults)
+if ~isfield(mission, 'inclination'),  mission.inclination  = 0.0;             end % [rad]
+if ~isfield(mission, 'launch_lat'),   mission.launch_lat   = deg2rad(38.65);  end % [rad]
+if ~isfield(mission, 'east_azimuth'), mission.east_azimuth = 0;               end
 
 %% Trajectory optimization — search bounds
 traj_bounds.t_pitch_s      = [5, 100];   % [s]
@@ -35,11 +35,13 @@ opt_opts.verbose = true;
 [result, history] = evaluate_payload_ratio(cfg, mission, traj_bounds, opt_opts);
 
 %% Check if desired payload is achievable
+orbit_desc = describe_orbit(mission.orbit);
 if payload <= result.payload_kg
-    fprintf('Desired payload %.2f kg CAN be delivered to %.0f km orbit.\n', payload, mission.target_alt/1e3);
+    fprintf('Desired payload %.2f kg CAN be delivered to %s orbit.\n', ...
+        payload, orbit_desc);
 else
-    fprintf('Desired payload %.2f kg exceeds capability %.2f kg for %.0f km orbit.\n', ...
-        payload, result.payload_kg, mission.target_alt/1e3);
+    fprintf(['Desired payload %.2f kg exceeds capability %.2f kg for %s ', ...
+        'orbit.\n'], payload, result.payload_kg, orbit_desc);
 end
 
 %% Report
@@ -57,3 +59,16 @@ plot_trajectory(history.best_traj);
 save('last_run.mat', 'result', 'history');
 disp('Results saved to last_run.mat');
 end
+
+function desc = describe_orbit(orbit)
+switch lower(orbit.type)
+    case 'circular'
+        desc = sprintf('%.0f km circular', orbit.altitude_km);
+    case {'elliptic','elliptical'}
+        desc = sprintf('%.0f x %.0f km elliptical', ...
+            orbit.periapsis_km, orbit.apoapsis_km);
+    otherwise
+        desc = 'specified';
+end
+end
+
