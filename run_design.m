@@ -1,9 +1,10 @@
 function [result, history] = run_design(payload, orbit_alt)
 %RUN_DESIGN Execute rocket design evaluation without GUI interaction.
 %   [RESULT, HISTORY] = RUN_DESIGN(PAYLOAD, ORBIT_ALT) runs the design
-%   evaluation for a desired PAYLOAD mass [kg] and target orbit altitude
-%   ORBIT_ALT [km]. The routine reports feasibility, prints a summary,
-%   plots the best trajectory and saves results to 'last_run.mat'.
+%   evaluation for a desired PAYLOAD (struct with fields mass_kg and
+%   volume_m3) and target orbit altitude ORBIT_ALT [km]. The routine
+%   reports feasibility, prints a summary, plots the best trajectory and
+%   saves results to 'last_run.mat'.
 
 % Housekeeping and paths
 clc; close all;
@@ -29,17 +30,24 @@ mission.tol_gamma = deg2rad(2);     % Trajectory angle tolerance [rad]
 % Replace with another file in /configs if desired
 cfg = demo_config();
 
+% Optional check against fairing volume capacity, if provided in cfg
+if isfield(cfg, 'fairing_volume_m3') && payload.volume_m3 > cfg.fairing_volume_m3
+    error('Payload volume %.2f m^3 exceeds fairing capacity %.2f m^3.', ...
+          payload.volume_m3, cfg.fairing_volume_m3);
+end
+
 %% Trajectory optimization + bisection of maximum payload
 % Note: propellant mass per stage comes from cfg.stages(i).mp
 opt_opts.verbose = true;
 [result, history] = evaluate_payload_ratio(cfg, mission, traj_bounds, opt_opts);
 
 %% Check if desired payload is achievable
-if payload <= result.payload_kg
-    fprintf('Desired payload %.2f kg CAN be delivered to %.0f km orbit.\n', payload, mission.target_alt/1e3);
+if payload.mass_kg <= result.payload_kg
+    fprintf('Desired payload %.2f kg CAN be delivered to %.0f km orbit.\n', ...
+        payload.mass_kg, mission.target_alt/1e3);
 else
     fprintf('Desired payload %.2f kg exceeds capability %.2f kg for %.0f km orbit.\n', ...
-        payload, result.payload_kg, mission.target_alt/1e3);
+        payload.mass_kg, result.payload_kg, mission.target_alt/1e3);
 end
 
 %% Report

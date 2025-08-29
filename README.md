@@ -10,14 +10,22 @@
 1. Open `main.m` in MATLAB/Octave.
 2. Choose the configuration in `main.m` (e.g., `demo_config` or create one in `configs/`).
 3. Run `main.m`. The script will:
-   - Show a small GUI asking for the desired payload mass and target orbit altitude.
+   - Show a small GUI asking for the desired payload mass, payload volume and target orbit altitude.
    - Load the launcher configuration and mission parameters.
    - Optimize (by default) the basic trajectory (pitch timing and kick).
    - Search, by bisection, for the **maximum payload** that still reaches the target orbit.
    - Report the payload ratio (= m_payload / m0) and provide altitude/velocity plots.
 
+Example non-GUI execution:
+
+```matlab
+payload.mass_kg = 1000;
+payload.volume_m3 = 2.0;
+[result, history] = run_design(payload, 200); % 200 km target orbit
+```
+
 ## Folders
-- `configs/` — parameter files for each launcher (e.g., `demo_config.m`).  
+- `configs/` — parameter files for each launcher (e.g., `demo_config.m`).
   Create variants (e.g., `vega_config.m`, `protonkdm3_config.m`, `ariane5_config.m`) by editing Isp, thrust, structural masses, propellant masses, `CdA`, etc.
 - `util/` — helper functions.
 

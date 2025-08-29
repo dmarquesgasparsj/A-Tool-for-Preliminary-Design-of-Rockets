@@ -85,7 +85,9 @@ pl_lo = 0.0;
 traj_best = [];
 for iter=1:20
     pl_try = 0.5*(pl_lo + pl_hi);
-    traj = simulate_gravity_turn(cfg, mission, tp_params, pl_try);
+    payload.mass_kg = pl_try;
+    payload.volume_m3 = 0;
+    traj = simulate_gravity_turn(cfg, mission, tp_params, payload);
     if reaches_orbit(traj, mission)
         pl_lo = pl_try; traj_best = traj;
     else
@@ -94,7 +96,9 @@ for iter=1:20
 end
 plmax = pl_lo;
 if isempty(traj_best)
-    traj_best = simulate_gravity_turn(cfg, mission, tp_params, plmax);
+    payload.mass_kg = plmax;
+    payload.volume_m3 = 0;
+    traj_best = simulate_gravity_turn(cfg, mission, tp_params, payload);
 end
 end
 
