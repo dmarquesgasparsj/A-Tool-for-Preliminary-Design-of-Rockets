@@ -99,18 +99,20 @@ end
 end
 
 function ok = reaches_orbit(traj, mission)
-% Verifica critério de órbita: altitude >= target_alt, velocidade ~ v_circ e gamma ~ 0
-env = earth_constants();
-r_target = env.Re + mission.target_alt;
-v_circ   = sqrt(env.mu / r_target);
+% Verifica critério de órbita de acordo com o tipo selecionado
+cond = orbit_conditions(mission.orbit);
+target_alt = cond.altitude_m;
 
 % encontrar o instante em que h cruza target_alt (ou o ponto mais alto)
-idx = find(traj.h >= mission.target_alt, 1, 'first');
+idx = find(traj.h >= target_alt, 1, 'first');
 if isempty(idx)
     [~, idx] = max(traj.h);
 end
 
-v_err = abs(traj.v(idx) - v_circ);
+v_err = abs(traj.v(idx) - cond.velocity_ms);
 g_err = abs(traj.gamma(idx));
-ok = (traj.h(idx) >= mission.target_alt) && (v_err <= mission.tol_v_ms) && (g_err <= mission.tol_gamma);
+ok = (traj.h(idx) >= target_alt) && (v_err <= mission.tol_v_ms) && (g_err <= mission.tol_gamma);
+if ~isempty(cond.apoapsis_m)
+    ok = ok && (max(traj.h) >= cond.apoapsis_m);
+end
 end
