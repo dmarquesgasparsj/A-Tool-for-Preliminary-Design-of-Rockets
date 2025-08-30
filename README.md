@@ -21,6 +21,16 @@
   Create variants (e.g., `vega_config.m`, `protonkdm3_config.m`, `ariane5_config.m`) by editing Isp, thrust, structural masses, propellant masses, `CdA`, etc.
 - `util/` — helper functions.
 
+### Component heuristics
+`util/component_heuristics.m` provides quick estimates for basic hardware:
+
+```matlab
+ms = estimate_engine_mass(1.0e6);             % massa do motor para 1 MN
+vol = estimate_tank_volume(50e3, 1000);       % volume para 50 t a 1000 kg/m^3
+```
+These helpers are used in `demo_config.m` to populate structural mass,
+propellant volume and structural fraction automatically.
+
 ## Main limitations
 - Simplified ISA (exponential, fixed scale height).
 - Drag modeled via constant `CdA` per stage.

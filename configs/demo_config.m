@@ -8,7 +8,9 @@ function cfg = demo_config()
 %   .Isp_s      — impulso específico [s]
 %   .thrust_N   — empuxo constante [N] durante a queima
 %   .fs_struct  — fração estrutural (m_struct / (m_struct + m_prop))
+%   .ms_kg      — massa estrutural [kg] (motor + tanque)
 %   .mp_kg      — massa de propelente [kg]
+%   .volume_m3  — volume estimado do tanque [m^3]
 %   .CdA_m2     — coef. de arrasto x área de referência [m^2]
 %
 % NOTA: Para casos com 3-4 estágios, adicionar mais entradas ao vetor.
@@ -18,19 +20,23 @@ cfg.notes = 'Modelo simplificado, sem boosters.';
 
 % Estágio 1 (valores meramente ilustrativos)
 s1.name      = 'Stage 1';
-s1.Isp_s     = 280;          % s  (sólido ou líquido de baixa altitude)
-s1.thrust_N  = 2.0e6;        % N
-s1.fs_struct = 0.08;         % m_struct / (m_struct + m_prop)
-s1.mp_kg     = 120e3;        % kg
-s1.CdA_m2    = 4.0;          % m^2
+s1.Isp_s     = 280;           % s  (sólido ou líquido de baixa altitude)
+s1.thrust_N  = 2.0e6;         % N
+s1.ms_kg     = estimate_engine_mass(s1.thrust_N);
+s1.mp_kg     = 30 * s1.ms_kg; % heurística: m_prop ~ 30x m_motor
+s1.fs_struct = s1.ms_kg / (s1.ms_kg + s1.mp_kg);
+s1.volume_m3 = estimate_tank_volume(s1.mp_kg, 1800); % densidade típica de propelente sólido
+s1.CdA_m2    = 4.0;           % m^2
 
 % Estágio 2
 s2.name      = 'Stage 2';
-s2.Isp_s     = 330;          % s (líquido)
-s2.thrust_N  = 600e3;        % N
-s2.fs_struct = 0.10;         %
-s2.mp_kg     = 30e3;         % kg
-s2.CdA_m2    = 2.0;          % m^2
+s2.Isp_s     = 330;           % s (líquido)
+s2.thrust_N  = 600e3;         % N
+s2.ms_kg     = estimate_engine_mass(s2.thrust_N);
+s2.mp_kg     = 25 * s2.ms_kg; % heurística: m_prop ~ 25x m_motor
+s2.fs_struct = s2.ms_kg / (s2.ms_kg + s2.mp_kg);
+s2.volume_m3 = estimate_tank_volume(s2.mp_kg, 1000); % densidade típica de propelente líquido
+s2.CdA_m2    = 2.0;           % m^2
 
 cfg.stages = [s1, s2];
 end
