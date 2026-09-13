@@ -1,68 +1,134 @@
-# MATLAB Toolkit — Preliminary Rocket Design
+# A Tool for Preliminary Design of Rockets
 
-**Language:** English  
-**Purpose:** Rebuild and modernize the preliminary launch-vehicle design tool developed in the author's Master's thesis, while keeping the code modular, testable and usable in MATLAB/Octave.
+MATLAB software originally developed in **2014** as part of my MSc thesis in Aerospace Engineering at **Instituto Superior Técnico (IST), University of Lisbon**, under the supervision of **Prof. Paulo J. S. Gil**.
 
-> ⚠️ **Current status:** the repository presently contains a simplified 2D staged-ascent model. It is being progressively extended toward the fuller thesis architecture (mass sizing ↔ trajectory iteration, configuration trades, boosters and validation cases).
+The original work developed a preliminary launch-vehicle design tool coupling a **mass model** with an **ascent trajectory model**. For a prescribed payload and target orbit, the program explored launcher configurations and design parameters with the objective of reducing **Gross Lift-Off Weight (GLOW)** and increasing the **payload ratio**.
 
-## How to use
-1. Open `main.m` in MATLAB/Octave.
-2. Choose the configuration in `run_design.m` (currently `demo_config`).
-3. Run `main.m` or call `run_design(payload_kg, orbit_alt_km)`.
-4. The current implementation:
-   - loads a staged launcher configuration;
-   - validates stage data and normalizes structural masses;
-   - searches the full trajectory-design domain for pitch timing, kick angle and kick duration;
-   - refines that solution using bounded variables with `fminsearch`;
-   - finds the maximum feasible payload using an adaptive upper bound plus bisection;
-   - evaluates circular-orbit conditions across all trajectory samples at or above the target altitude;
-   - reports payload ratio and trajectory histories.
+> **Original research and software:** 2014  
+> **Public GitHub reconstruction:** 2025  
+> **Maintenance, testing and restoration:** 2026–present
 
-## Repository structure
-- `configs/` — launcher definitions.
-- `util/` — atmosphere, equations of motion, guidance, configuration validation and optimization helpers.
-- `tests/` — MATLAB regression tests.
-- `main.m` — optional GUI entry point.
-- `run_design.m` — programmatic design entry point.
+The scientific model, equations, design logic and historical validation cases described here originate from the 2014 thesis. The present GitHub repository is a public reconstruction of that work after the original working source files were no longer available. Modern software-engineering changes are identified separately from the original thesis model.
 
-## Current physical model
-- 2D polar equations of motion with spherical-Earth gravity `mu/r^2`.
-- Initial eastward velocity from Earth rotation and launch latitude.
-- 1976 U.S. Standard Atmosphere layers to ~85 km, followed by an isothermal extrapolation.
-- Constant thrust and specific impulse per stage.
-- Constant `CdA` per stage.
-- Sequential stage burns and stage-structure jettison.
-- Guidance: vertical ascent → finite pitch kick → thrust aligned with velocity (gravity turn).
+## Original 2014 model
 
-## Current limitations
-The present code is **not yet the complete thesis tool**. In particular it does not yet include:
-- the thesis mass-estimation loop and Mass Estimation Relationships (MERs);
-- iterative vehicle geometry/dimensions;
-- side boosters and parallel burns;
-- Mach-dependent drag coefficients;
-- the high-altitude/free-flight optimal-control phase;
-- the coupled design ↔ trajectory ΔV convergence loop;
-- the Vega, Proton K and Ariane 5 validation/optimization cases.
+The thesis tool was organised around two coupled parts:
 
-## Reconstruction roadmap
-The intended sequence is:
-1. **Numerical/core reliability** — configuration validation, bounded trajectory optimization, robust payload bracketing, orbit-condition metrics and regression tests. **In progress / first pass complete.**
-2. **Mass model** — implement the thesis structural-factor/MER sizing loop and expose stage geometry and mass breakdowns.
-3. **Vehicle architecture** — support arbitrary stages, boosters and parallel propulsion events.
-4. **Aerodynamics** — add reference geometry and `Cd(Mach)` instead of constant `CdA`.
-5. **Three-phase ascent** — recover vertical ascent, gravity turn and optimized free-flight phase.
-6. **Coupled convergence** — iterate mass sizing and trajectory losses until the required ΔV converges.
-7. **Historical validation** — reproduce the thesis cases for Vega, Proton K and Ariane 5 and track deviations as regression tests.
+1. **Mass model**
+   - two to four serial stages;
+   - optional parallel boosters;
+   - Tsiolkovsky-based stage sizing from assigned `Delta-V`;
+   - structural-factor iteration;
+   - Mass Estimation Relationships (MERs);
+   - propellant selection and density data;
+   - stage diameter, tank volume and launcher dimensions;
+   - fairing sizing and structural-mass estimates.
+
+2. **Trajectory model**
+   - vertical ascent;
+   - atmospheric gravity turn;
+   - transition to exo-atmospheric flight using the Knudsen number;
+   - optimized free-flight phase formulated as a Two Point Boundary Value Problem (TPBVP);
+   - `ode45` / Runge-Kutta integration and indirect optimal-control formulation;
+   - computation of drag and gravity losses;
+   - iteration back to the mass model until the design `Delta-V` and trajectory `Delta-V` converged.
+
+For every combination of launcher configuration and design parameters, the complete mass-model/trajectory loop was evaluated. The final design was selected by minimum GLOW / maximum payload ratio.
+
+## Historical validation
+
+The original thesis validated the model against two real launch vehicles and then used it for an optimization study:
+
+| Case | Mission | Thesis result |
+| --- | --- | --- |
+| **Vega** | 1,500 kg to 700 km circular orbit | GLOW deviation: **4.8%** |
+| **Proton K** | 19,360 kg to 200 km circular orbit | GLOW deviation: **6.2%** |
+| **Ariane 5 study** | 19.3 t to 200 km | optimized configuration reduced GLOW by about **84 t (11%)** |
+
+The Ariane 5 study varied seven design parameters, including core diameter, thrust, `Delta-V` distribution, number of boosters, booster thrust, booster diameter and booster burn time.
+
+## Repository status
+
+This repository is being restored progressively from the thesis documentation. The aim is to recover the **2014 model faithfully first**, and only then layer modern improvements on top of it.
+
+### Recovered / modernized core
+
+- staged 2D trajectory propagation;
+- U.S. Standard Atmosphere implementation for the lower atmosphere;
+- stage mass accounting and separation events;
+- launcher configuration validation;
+- bounded trajectory-parameter search;
+- adaptive payload bracketing and bisection;
+- MATLAB regression tests.
+
+### Original thesis components still being restored
+
+- full structural-factor / MER mass-sizing loop;
+- propellant database and stage-volume model;
+- fairing and launcher geometry model;
+- boosters and parallel staging;
+- Mach-dependent drag coefficient from the thesis;
+- Knudsen-number transition criterion;
+- optimized TPBVP free-flight phase;
+- coupled `Delta-V` convergence between mass model and trajectory;
+- complete Vega, Proton K and Ariane 5 cases.
+
+See [`docs/THESIS_MODEL.md`](docs/THESIS_MODEL.md) for the 2014 architecture and [`docs/RECONSTRUCTION.md`](docs/RECONSTRUCTION.md) for the distinction between recovered thesis functionality and later maintenance.
+
+## Running the current code
+
+Open MATLAB in the repository root and run:
+
+```matlab
+main
+```
+
+or programmatically:
+
+```matlab
+[result, history] = run_design(1000, 200);
+```
+
+where the inputs are payload mass in kilograms and target circular-orbit altitude in kilometres.
 
 ## Tests
-From the repository root in MATLAB:
+
+Run the current regression tests from MATLAB with:
 
 ```matlab
 results = runtests('tests');
 table(results)
 ```
 
-The test suite will grow with each recovered thesis component, with the historical launcher results eventually acting as end-to-end regression tests.
+As the original model is restored, the historical Vega, Proton K and Ariane 5 results will become end-to-end regression tests.
 
----
-This toolkit stems from the author's Master's thesis available at: <https://fenix.tecnico.ulisboa.pt/cursos/meaer/dissertacao/2353642467857>.
+## Repository layout
+
+```text
+configs/      launcher configurations
+util/         numerical and physical-model functions
+tests/        MATLAB regression tests
+docs/         thesis-model and reconstruction documentation
+main.m        interactive entry point
+run_design.m  programmatic entry point
+```
+
+The structure will evolve as the original mass model, aerodynamics and validation cases are restored. Large file moves are intentionally postponed until the scientific model is stable, so that the reconstruction remains easy to review against the thesis.
+
+## Project history
+
+- **July 2014 — MSc thesis:** *A Tool for Preliminary Design of Rockets*, Instituto Superior Técnico. The MATLAB tool, mass model, trajectory model, validation studies and Ariane 5 optimization were developed as part of the thesis.
+- **2025 — Public GitHub reconstruction:** the project was placed on GitHub and source reconstruction began after the original working code was no longer available.
+- **2026 — Restoration and maintenance:** the implementation is being compared systematically with the thesis, missing scientific components are being restored, and regression tests and modern repository tooling are being added.
+
+The Git history records when the public reconstruction was written; it is **not intended to rewrite the chronology of the original 2014 research**.
+
+## Thesis
+
+**Diogo Marques Gaspar**, *A Tool for Preliminary Design of Rockets*, MSc Thesis in Aerospace Engineering, Instituto Superior Técnico, July 2014. Supervisor: Prof. Paulo J. S. Gil.
+
+Thesis record: <https://fenix.tecnico.ulisboa.pt/cursos/meaer/dissertacao/2353642467857>
+
+## License
+
+Released under the [MIT License](LICENSE). The licence applies to the source code in this repository. Academic use should also cite the 2014 thesis above.
