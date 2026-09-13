@@ -2,9 +2,13 @@ function tests = test_core
 tests = functiontests(localfunctions);
 end
 
+function setupOnce(~)
+repo_root = fileparts(fileparts(mfilename('fullpath')));
+addpath(fullfile(repo_root, 'configs'));
+addpath(fullfile(repo_root, 'util'));
+end
+
 function testConfigNormalization(testCase)
-addpath('configs');
-addpath('util');
 cfg = validate_config(demo_config());
 verifyEqual(testCase, numel(cfg.stages), 2);
 verifyGreaterThan(testCase, cfg.stages(1).ms_kg, 0);
@@ -12,8 +16,6 @@ verifyEqual(testCase, cfg.stages(1).fs_struct, 0.08, 'AbsTol', 1e-12);
 end
 
 function testTrajectoryMassAccounting(testCase)
-addpath('configs');
-addpath('util');
 cfg = validate_config(demo_config());
 mission.target_alt = 200e3;
 mission.launch_lat = deg2rad(38.65);
@@ -33,9 +35,8 @@ verifyEqual(testCase, traj.stage_index(end), numel(cfg.stages));
 end
 
 function testInvalidStructuralFractionRejected(testCase)
-addpath('configs');
-addpath('util');
 cfg = demo_config();
 cfg.stages(1).fs_struct = 1.2;
-verifyError(testCase, @() validate_config(cfg), 'MATLAB:expectedLessThan');
+verifyError(testCase, @() validate_config(cfg), ...
+    'validate_config:InvalidStructuralFraction');
 end
