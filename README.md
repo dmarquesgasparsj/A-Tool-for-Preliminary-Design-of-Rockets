@@ -1,36 +1,68 @@
-
-# MATLAB Toolkit — Preliminary Rocket Design (Multi-Stage + Gravity Turn)
+# MATLAB Toolkit — Preliminary Rocket Design
 
 **Language:** English  
-**Purpose:** Estimate masses, dimensions and payload ratio for multi-stage rockets, including a 2D gravity turn simulation and simple iteration between **trajectory** and **configuration**.
+**Purpose:** Rebuild and modernize the preliminary launch-vehicle design tool developed in the author's Master's thesis, while keeping the code modular, testable and usable in MATLAB/Octave.
 
-> ⚠️ **Important note:** These models are preliminary/simplified and rely on approximations (exponential atmosphere, constant drag per stage, simplified pitch control, sequential stage burns without side boosters). They are useful for initial trade-offs and sensitivity studies, **not** for flight verification.
+> ⚠️ **Current status:** the repository presently contains a simplified 2D staged-ascent model. It is being progressively extended toward the fuller thesis architecture (mass sizing ↔ trajectory iteration, configuration trades, boosters and validation cases).
 
 ## How to use
 1. Open `main.m` in MATLAB/Octave.
-2. Choose the configuration in `main.m` (e.g., `demo_config` or create one in `configs/`).
-3. Run `main.m`. The script will:
-   - Show a small GUI asking for the desired payload mass and target orbit altitude.
-   - Load the launcher configuration and mission parameters.
-   - Optimize (by default) the basic trajectory (pitch timing and kick).
-   - Search, by bisection, for the **maximum payload** that still reaches the target orbit.
-   - Report the payload ratio (= m_payload / m0) and provide altitude/velocity plots.
+2. Choose the configuration in `run_design.m` (currently `demo_config`).
+3. Run `main.m` or call `run_design(payload_kg, orbit_alt_km)`.
+4. The current implementation:
+   - loads a staged launcher configuration;
+   - validates stage data and normalizes structural masses;
+   - searches the full trajectory-design domain for pitch timing, kick angle and kick duration;
+   - refines that solution using bounded variables with `fminsearch`;
+   - finds the maximum feasible payload using an adaptive upper bound plus bisection;
+   - evaluates circular-orbit conditions across all trajectory samples at or above the target altitude;
+   - reports payload ratio and trajectory histories.
 
-## Folders
-- `configs/` — parameter files for each launcher (e.g., `demo_config.m`).  
-  Create variants (e.g., `vega_config.m`, `protonkdm3_config.m`, `ariane5_config.m`) by editing Isp, thrust, structural masses, propellant masses, `CdA`, etc.
-- `util/` — helper functions.
+## Repository structure
+- `configs/` — launcher definitions.
+- `util/` — atmosphere, equations of motion, guidance, configuration validation and optimization helpers.
+- `tests/` — MATLAB regression tests.
+- `main.m` — optional GUI entry point.
+- `run_design.m` — programmatic design entry point.
 
-## Main limitations
-- Simplified ISA (exponential, fixed scale height).
-- Drag modeled via constant `CdA` per stage.
-- Thrust direction: vertical until `t_pitch`; short pitch-kick window; then gravity turn with thrust aligned with velocity.
-- No modeling of side boosters/asymmetric attachments.
-- Optimization *without* toolboxes (uses grid search and `fminsearch` when applicable).
+## Current physical model
+- 2D polar equations of motion with spherical-Earth gravity `mu/r^2`.
+- Initial eastward velocity from Earth rotation and launch latitude.
+- 1976 U.S. Standard Atmosphere layers to ~85 km, followed by an isothermal extrapolation.
+- Constant thrust and specific impulse per stage.
+- Constant `CdA` per stage.
+- Sequential stage burns and stage-structure jettison.
+- Guidance: vertical ascent → finite pitch kick → thrust aligned with velocity (gravity turn).
 
-## Expected results
-- Estimate of lift-off mass, payload ratio and time histories (altitude, velocity, angle).
-- Basis to compare configurations (by editing files in `configs/`) and perform parameter what-if analyses.
+## Current limitations
+The present code is **not yet the complete thesis tool**. In particular it does not yet include:
+- the thesis mass-estimation loop and Mass Estimation Relationships (MERs);
+- iterative vehicle geometry/dimensions;
+- side boosters and parallel burns;
+- Mach-dependent drag coefficients;
+- the high-altitude/free-flight optimal-control phase;
+- the coupled design ↔ trajectory ΔV convergence loop;
+- the Vega, Proton K and Ariane 5 validation/optimization cases.
+
+## Reconstruction roadmap
+The intended sequence is:
+1. **Numerical/core reliability** — configuration validation, bounded trajectory optimization, robust payload bracketing, orbit-condition metrics and regression tests. **In progress / first pass complete.**
+2. **Mass model** — implement the thesis structural-factor/MER sizing loop and expose stage geometry and mass breakdowns.
+3. **Vehicle architecture** — support arbitrary stages, boosters and parallel propulsion events.
+4. **Aerodynamics** — add reference geometry and `Cd(Mach)` instead of constant `CdA`.
+5. **Three-phase ascent** — recover vertical ascent, gravity turn and optimized free-flight phase.
+6. **Coupled convergence** — iterate mass sizing and trajectory losses until the required ΔV converges.
+7. **Historical validation** — reproduce the thesis cases for Vega, Proton K and Ariane 5 and track deviations as regression tests.
+
+## Tests
+From the repository root in MATLAB:
+
+```matlab
+results = runtests('tests');
+table(results)
+```
+
+The test suite will grow with each recovered thesis component, with the historical launcher results eventually acting as end-to-end regression tests.
 
 ---
 This toolkit stems from the author's Master's thesis available at: <https://fenix.tecnico.ulisboa.pt/cursos/meaer/dissertacao/2353642467857>.

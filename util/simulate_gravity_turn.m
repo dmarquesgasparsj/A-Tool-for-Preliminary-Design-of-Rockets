@@ -1,99 +1,120 @@
 function traj = simulate_gravity_turn(cfg, mission, traj_params, payload_mass)
-% SIMULATE_GRAVITY_TURN — Integra a trajetória 2D por estágios.
-% Entradas:
-%   cfg.stages(i): Isp_s, thrust_N, fs_struct, mp_kg, CdA_m2
-%   mission: target_alt [m], launch_lat [rad], etc.
-%   traj_params: t_pitch [s], pitch_kick [rad], kick_dur [s]
-%   payload_mass: massa da carga útil [kg]
-% Saída:
-%   traj: struct com histórico (t, r, theta, vr, vtheta, m, h, v, gamma)
+%SIMULATE_GRAVITY_TURN Integrate a simplified 2D staged ascent.
+%   The vehicle flies vertically, performs a short pitch kick and then
+%   follows a gravity turn with thrust aligned to the velocity vector.
+%
+%   This function deliberately contains only the trajectory propagation.
+%   Vehicle sizing belongs to the mass/design model, so pre-computed ms_kg
+%   values are respected instead of being silently overwritten here.
 
-env = earth_constants();
-Re = env.Re; mu = env.mu; omega = env.omega;
+cfg = validate_config(cfg);
+validateattributes(payload_mass, {'numeric'}, ...
+    {'scalar','real','finite','nonnegative'});
 
-% Empuxo inicial devido à rotação da Terra (componente Este)
-v0_east = omega * Re * cos(mission.launch_lat);
-
-% Mass stacking (início do estágio 1)
-stages = cfg.stages;
-N = numel(stages);
-
-% calcular massas estruturais a partir de fs_struct e mp
-for i=1:N
-    fs = stages(i).fs_struct;
-    mp = stages(i).mp_kg;
-    ms = fs/(1-fs) * mp;     % m_struct = fs/(1-fs) * m_prop
-    stages(i).ms_kg = ms;
+required_mission = {'target_alt','launch_lat'};
+for k = 1:numel(required_mission)
+    if ~isfield(mission, required_mission{k})
+        error('Mission is missing required field "%s".', required_mission{k});
+    end
 end
 
+required_guidance = {'t_pitch','pitch_kick','kick_dur'};
+for k = 1:numel(required_guidance)
+    if ~isfield(traj_params, required_guidance{k})
+        error('Trajectory parameters are missing "%s".', required_guidance{k});
+    end
+end
+
+env = earth_constants();
+Re = env.Re;
+omega = env.omega;
+
+% Initial eastward velocity from Earth's rotation.
+v0_east = omega * Re * cos(mission.launch_lat);
+
+stages = cfg.stages;
+N = numel(stages);
 m0 = payload_mass + sum([stages.mp_kg]) + sum([stages.ms_kg]);
 
-% Estado inicial
+% State = [radius; longitude-like angle; radial velocity; tangential velocity; mass]
 state = [Re; 0; 0; v0_east; m0];
 t0 = 0;
-t_hist = []; x_hist = [];
+t_hist = [];
+x_hist = [];
+stage_index_hist = [];
+stage_events = repmat(struct('name','','t_start',0,'t_burnout',0, ...
+    'mass_start_kg',0,'mass_burnout_kg',0,'mass_after_sep_kg',0), 1, N);
 
-% Guidance
+% Guidance profile.
 gpar.t_pitch = traj_params.t_pitch;
 gpar.kick_dur = traj_params.kick_dur;
 gpar.kick_ang = traj_params.pitch_kick;
 ufun = guidance_profiles('vertical-then-kick-then-gravity-turn', gpar);
 
-% Integração por estágios (queima completa de mp de cada estágio)
-opts = odeset('RelTol',1e-7,'AbsTol',1e-8);
+ode_opts = odeset('RelTol',1e-7,'AbsTol',1e-8);
 
-for i=1:N
+for i = 1:N
     st = stages(i);
-    mdot = st.thrust_N / (st.Isp_s * env.g0); % consumo de massa constante
-
-    % Massa no fim da queima do estágio i (antes de separar estrutura)
-    m_end_burn = state(5) - st.mp_kg;  % queima todo o propelente desse estágio
-
-    % Tempo de queima
+    mdot = st.thrust_N / (st.Isp_s * env.g0);
     tburn = st.mp_kg / mdot;
+    m_start = state(5);
+    m_end_burn = m_start - st.mp_kg;
 
-    % EDO com estágio atual
     eom = @(t, x) equations_of_motion(t, x, env, st, ufun);
+    [t_seg, x_seg] = ode45(eom, [t0, t0 + tburn], state, ode_opts);
 
-    [t_seg, x_seg] = ode45(eom, [t0, t0+tburn], state, opts);
-
-    % Forçar massa (último ponto = m_end_burn)
+    % Numerical integration of mass is theoretically identical to the
+    % analytical burn value. Pin the final sample to prevent drift.
     x_seg(end,5) = m_end_burn;
 
-    % Acumular histórico
-    t_hist = [t_hist; t_seg];
-    x_hist = [x_hist; x_seg];
+    % Avoid duplicate boundary sample when concatenating stages.
+    if i > 1
+        t_seg = t_seg(2:end);
+        x_seg = x_seg(2:end,:);
+    end
 
-    % Separação de estrutura do estágio i (drop ms) — se não for o último
+    t_hist = [t_hist; t_seg]; %#ok<AGROW>
+    x_hist = [x_hist; x_seg]; %#ok<AGROW>
+    stage_index_hist = [stage_index_hist; repmat(i, numel(t_seg), 1)]; %#ok<AGROW>
+
     if i < N
         m_after_sep = m_end_burn - st.ms_kg;
     else
-        m_after_sep = m_end_burn; % último estágio: mantém estrutura
+        m_after_sep = m_end_burn;
     end
 
-    % Atualizar estado para próximo estágio
+    stage_events(i).name = st.name;
+    stage_events(i).t_start = t0;
+    stage_events(i).t_burnout = t0 + tburn;
+    stage_events(i).mass_start_kg = m_start;
+    stage_events(i).mass_burnout_kg = m_end_burn;
+    stage_events(i).mass_after_sep_kg = m_after_sep;
+
     state = x_seg(end,:)';
     state(5) = m_after_sep;
-    t0 = t_hist(end);
+    t0 = t0 + tburn;
 end
 
-% Pós-Processamento
-r  = x_hist(:,1);
+r = x_hist(:,1);
 vr = x_hist(:,3);
 vtheta = x_hist(:,4);
-m  = x_hist(:,5);
-
 h = r - Re;
 v = hypot(vr, vtheta);
-gamma = atan2(vr, vtheta); % ângulo da trajetória [rad]
+gamma = atan2(vr, vtheta);
 
 traj.t = t_hist;
 traj.r = r;
+traj.theta = x_hist(:,2);
+traj.vr = vr;
+traj.vtheta = vtheta;
 traj.h = h;
 traj.v = v;
 traj.gamma = gamma;
-traj.m = m;
+traj.m = x_hist(:,5);
 traj.m0 = m0;
+traj.payload_kg = payload_mass;
+traj.stage_index = stage_index_hist;
+traj.stage_events = stage_events;
 traj.cfg = cfg;
 traj.traj_params = traj_params;
 end
