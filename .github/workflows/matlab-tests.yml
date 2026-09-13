@@ -1,0 +1,23 @@
+name: MATLAB tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    name: Run MATLAB regression tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up MATLAB
+        uses: matlab-actions/setup-matlab@v3
+
+      - name: Run tests
+        uses: matlab-actions/run-command@v3
+        with:
+          command: addpath('util','configs'); results = runtests('tests'); assertSuccess(results)
