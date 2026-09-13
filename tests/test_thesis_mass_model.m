@@ -3,8 +3,9 @@ tests = functiontests(localfunctions);
 end
 
 function setupOnce(~)
-addpath('configs');
-addpath('util');
+repo_root = fileparts(fileparts(mfilename('fullpath')));
+addpath(fullfile(repo_root, 'configs'));
+addpath(fullfile(repo_root, 'util'));
 end
 
 function testStageMassReproducesTsiolkovsky(testCase)
