@@ -4,6 +4,18 @@ This repository contains a public reconstruction of software originally develope
 
 The purpose of this document is to keep the historical record clear while allowing the codebase to be restored, tested and improved.
 
+
+## Recovered original source
+
+A set of thesis-era MATLAB files was recovered in September 2026. These files are now treated as the highest-fidelity evidence for implementation details that the dissertation did not fully specify. See [RECOVERED_SOURCE_2014.md](RECOVERED_SOURCE_2014.md).
+
+The recovery changes the provenance hierarchy used by this project:
+
+1. recovered 2014 source for literal implementation behaviour;
+2. the 2014 thesis for scientific intent and architecture;
+3. clearly labelled reconstruction choices where neither source is complete;
+4. modern improvements only after the historical model is understood.
+
 ## What belongs to the 2014 thesis model
 
 A feature is described as part of the **original thesis model** when it is explicitly documented in the 2014 thesis, even if its present source file had to be rewritten during the public reconstruction.
