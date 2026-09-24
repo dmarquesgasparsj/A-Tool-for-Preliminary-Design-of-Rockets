@@ -138,3 +138,21 @@ specs(2)=struct('name','LOX/H2 upper', ...
     'thrust_N',300e3,'nozzle_area_ratio',80, ...
     'Isp_s',440,'epsilon0',0.10);
 end
+
+function testPresetsAreEditableInputCases(testCase)
+vega=general_launcher_preset('vega_prototype');
+verifyEqual(testCase,numel(vega.stages),4);
+verifyEqual(testCase,vega.mission.payload_kg,1500);
+verifyEqual(testCase,vega.mission.delta_v_budget_m_s,9200);
+verifyEqual(testCase,[vega.stages.thrust_N], ...
+    [2092 959 230 2.2]*1000,'AbsTol',1e-9);
+verifyEqual(testCase,[vega.stages.delta_v_fraction], ...
+    [.2 .25 .4 .15],'AbsTol',1e-12);
+verifyEqual(testCase,vega.stages(1).propellant_name,'HTPB-Al/AP');
+verifyEqual(testCase,vega.stages(4).mixture_ratio_OF,4);
+verifyEqual(testCase,vega.stages(4).Isp_s,317);
+
+demo=general_launcher_preset('illustrative_two_stage');
+verifyEqual(testCase,numel(demo.stages),2);
+verifyEqual(testCase,demo.stages(1).propulsion_type,'liquid');
+end
