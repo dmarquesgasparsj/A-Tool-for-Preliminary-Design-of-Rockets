@@ -1,0 +1,19 @@
+function cfg = modern_demo_config()
+%MODERN_DEMO_CONFIG Illustrative two-stage serial launcher.
+% Not Vega, Proton, or a historically validated launcher.
+% The purpose is to demonstrate the 2026 continuous-MER interface.
+
+cfg.name = 'MODERN-DEMO-2S';
+cfg.notes = 'Illustrative solid + LOX/RP1 stages; not orbit-validated.';
+
+s1 = struct('name','Solid first stage', ...
+    'Isp_s',285,'thrust_N',2e6,'delta_v_fraction',0.46, ...
+    'nozzle_area_ratio',20,'propellant_kind','solid', ...
+    'mixture_ratio_OF',NaN);
+s2 = struct('name','Liquid upper stage', ...
+    'Isp_s',335,'thrust_N',180e3,'delta_v_fraction',0.54, ...
+    'nozzle_area_ratio',40,'propellant_kind','LOX/RP1', ...
+    'mixture_ratio_OF',2.27);
+
+cfg.stages = [s1 s2];
+end
