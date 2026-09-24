@@ -45,6 +45,7 @@ switch lower(char(preset_name))
             specs(i).Isp_s=isps(i);
         end
         specs(1).propulsion_type='solid';
+        specs(4).mixture_ratio_OF=4; % OF4 in the recovered 2014 prototype
         % Explicitly retain HTPB-Al/AP as an uncatalogued historical
         % propellant; the modern model treats it as a generic solid.
         cfg=make_launcher_config(mission,specs);
