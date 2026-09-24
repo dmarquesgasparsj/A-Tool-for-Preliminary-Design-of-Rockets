@@ -10,23 +10,18 @@ addpath(fullfile(root,'configs'));
 addpath(fullfile(root,'util'));
 
 choice=menu('Preliminary Rocket Design','Build a custom launcher', ...
-    'Illustrative two-stage example','Cancel');
-if choice==0 || choice==3
+    'Illustrative two-stage example','Vega 2014 development inputs', ...
+    'Cancel');
+if choice==0 || choice==4
     cfg=[];
     return;
 end
 if choice==2
-    mission=struct('payload_kg',1000,'orbit_altitude_km',200, ...
-        'delta_v_budget_m_s',8500);
-    specs(1)=struct('name','LOX/RP1 first stage', ...
-        'propellant_name','LOX/RP1','delta_v_fraction',0.55, ...
-        'thrust_N',2.5e6,'nozzle_area_ratio',25, ...
-        'Isp_s',295,'epsilon0',0.08);
-    specs(2)=struct('name','LOX/H2 upper stage', ...
-        'propellant_name','LOX/H2','delta_v_fraction',0.45, ...
-        'thrust_N',300e3,'nozzle_area_ratio',80, ...
-        'Isp_s',440,'epsilon0',0.10);
-    cfg=make_launcher_config(mission,specs);
+    cfg=general_launcher_preset('illustrative_two_stage');
+    return;
+end
+if choice==3
+    cfg=general_launcher_preset('vega_prototype');
     return;
 end
 
