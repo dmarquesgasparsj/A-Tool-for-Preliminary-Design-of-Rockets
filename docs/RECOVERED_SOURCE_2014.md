@@ -1,6 +1,6 @@
 # Recovered Thesis-Era MATLAB Source
 
-In September 2026, a set of MATLAB files from the original thesis project was recovered. These files materially improve the fidelity of the public reconstruction because they expose implementation decisions that were only partially described in the dissertation.
+In September 2026, a set of **unfinished development versions** of MATLAB files from the original thesis project was recovered. They are evidence of work in progress, not the final program. These files materially improve the fidelity of the public reconstruction because they expose implementation decisions that were only partially described in the dissertation.
 
 ## Recovered source groups
 
@@ -51,7 +51,7 @@ The recovered atmosphere file carries an explicit third-party copyright notice (
 
 ## Structural-mass logic recovered from source
 
-The source resolves an ambiguity that remained after reading the thesis alone.
+The development source reveals one concrete approach to an ambiguity that remained after reading the thesis alone. Later drafts may have used different tolerances or aggregation choices.
 
 For each candidate structural factor, the legacy program:
 
@@ -94,3 +94,7 @@ Where recovered source and the thesis differ in detail, both should be retained:
 - **modern model**: later corrections or improvements, explicitly labelled as such.
 
 This three-layer distinction lets the repository preserve historical fidelity without perpetuating accidental bugs or undocumented approximations as if they were intended scientific assumptions.
+
+## Modern design direction
+
+The recovered menus were intended to make the numerical model usable without editing MATLAB files. The modern code retains menus **as a front end**, but configuration, mass sizing and eventually trajectory optimization are separate reusable functions. Arbitrary serial-stage counts and custom propellants are supported by the new mass-sizing interface. See [GENERALIZED_DESIGN.md](GENERALIZED_DESIGN.md).

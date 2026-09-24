@@ -8,7 +8,7 @@ The original work developed a preliminary launch-vehicle design tool coupling a 
 > **Public GitHub reconstruction:** 2025  
 > **Maintenance, testing and restoration:** 2026–present
 
-The scientific model, equations, design logic and historical validation cases described here originate from the 2014 thesis. The present GitHub repository is a public reconstruction of that work after the original working source files were no longer available. Modern software-engineering changes are identified separately from the original thesis model.
+The scientific model, equations, design logic and historical validation cases described here originate from the 2014 thesis. The present GitHub repository is a public reconstruction and ongoing improvement of that work. Some thesis-era MATLAB **development prototypes** have since been recovered; they are not assumed to be the final source. Original research, source recovery and later modelling/software improvements are documented separately.
 
 ## Original 2014 model
 
@@ -49,7 +49,7 @@ The Ariane 5 study varied seven design parameters, including core diameter, thru
 
 ## Repository status
 
-This repository is being restored progressively from the thesis documentation. The aim is to recover the **2014 model faithfully first**, and only then layer modern improvements on top of it.
+The repository combines research from the 2014 thesis, recovered **unfinished development files**, and a new generalized implementation. The old files provide scientific provenance and regression inputs, not design restrictions. The modern mass model accepts any number of **serial** stages and has a menu-independent programmatic API.
 
 ### Recovered / modernized core
 
@@ -63,7 +63,7 @@ This repository is being restored progressively from the thesis documentation. T
 
 ### Original thesis components still being restored
 
-- full structural-factor / MER mass-sizing loop;
+- final end-to-end validation of the modern structural-factor / MER loop against complete thesis launchers;
 - propellant database and stage-volume model;
 - fairing and launcher geometry model;
 - boosters and parallel staging;
@@ -77,19 +77,28 @@ See [`docs/THESIS_MODEL.md`](docs/THESIS_MODEL.md) for the 2014 architecture and
 
 ## Running the current code
 
-Open MATLAB in the repository root and run:
+For the **new generalized mass model**, open MATLAB in the repository root and run:
 
 ```matlab
 main
 ```
 
-or programmatically:
+Choose *Generalized launcher sizing*. Its dynamic menus let you configure an arbitrary number of serial stages and select existing or custom propellants. You can also bypass the menus entirely:
+
+```matlab
+cfg = general_launcher_preset('illustrative_two_stage');
+result = run_thesis_sizing(cfg);
+```
+
+For custom missions, use `make_launcher_config(mission, stages)` and `run_thesis_sizing(mission, stages)`. See [Generalized design](docs/GENERALIZED_DESIGN.md) for the complete API and physical assumptions. This is preliminary **mass sizing**: target orbit altitude is metadata until the trajectory and mass models are coupled.
+
+The earlier simplified trajectory demonstration remains accessible from the second `main` menu option or programmatically:
 
 ```matlab
 [result, history] = run_design(1000, 200);
 ```
 
-where the inputs are payload mass in kilograms and target circular-orbit altitude in kilometres.
+where those inputs are payload mass in kilograms and target orbit altitude in kilometres.
 
 ## Tests
 
@@ -113,7 +122,7 @@ main.m        interactive entry point
 run_design.m  programmatic entry point
 ```
 
-The structure will evolve as the original mass model, aerodynamics and validation cases are restored. Large file moves are intentionally postponed until the scientific model is stable, so that the reconstruction remains easy to review against the thesis.
+The structure will evolve as the mass model, aerodynamics and validation cases are improved and integrated. Large file moves are intentionally postponed until the scientific model is stable, so that the reconstruction remains easy to review against the thesis.
 
 ## Project history
 

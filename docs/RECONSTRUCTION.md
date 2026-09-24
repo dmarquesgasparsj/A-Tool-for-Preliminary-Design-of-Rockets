@@ -7,14 +7,14 @@ The purpose of this document is to keep the historical record clear while allowi
 
 ## Recovered original source
 
-A set of thesis-era MATLAB files was recovered in September 2026. These files are now treated as the highest-fidelity evidence for implementation details that the dissertation did not fully specify. See [RECOVERED_SOURCE_2014.md](RECOVERED_SOURCE_2014.md).
+A set of thesis-era MATLAB files was recovered in September 2026. These files are **unfinished development prototypes**, treated as evidence for implementation decisions that the dissertation did not fully specify, not as the final software. See [RECOVERED_SOURCE_2014.md](RECOVERED_SOURCE_2014.md).
 
 The recovery changes the provenance hierarchy used by this project:
 
-1. recovered 2014 source for literal implementation behaviour;
+1. recovered development source for literal behaviour of those versions only;
 2. the 2014 thesis for scientific intent and architecture;
 3. clearly labelled reconstruction choices where neither source is complete;
-4. modern improvements only after the historical model is understood.
+4. explicitly documented modern scientific and engineering improvements, without treating development artefacts as hard constraints.
 
 ## What belongs to the 2014 thesis model
 
@@ -103,6 +103,6 @@ Historical reference targets include:
 
 ## Modern extensions
 
-Once the thesis model is reproduced and validated, new capabilities can be developed on top of a clearly labelled modern branch or module. Possible examples are the same future-work directions already identified in the thesis: improved engine/nozzle modelling, trajectory constraints, aerodynamic improvements, cost modelling and additional missions.
+Modern capabilities can be implemented alongside historical recovery, provided that their physical assumptions are explicit and their results are validated rather than attributed to the unfinished 2014 source. The new generalized serial-stage model and menus are documented in [GENERALIZED_DESIGN.md](GENERALIZED_DESIGN.md). Possible examples are the same future-work directions already identified in the thesis: improved engine/nozzle modelling, trajectory constraints, aerodynamic improvements, cost modelling and additional missions.
 
 The goal is therefore not to freeze the code in 2014, but to preserve a clear boundary between **what was developed in the thesis** and **what was added later**.
