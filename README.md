@@ -56,7 +56,7 @@ The repository combines research from the 2014 thesis, recovered **unfinished de
 - staged 2D trajectory propagation;
 - independent extended atmosphere reconstruction to 2000 km with Mach/Reynolds/Knudsen diagnostics;
 - thesis Eq. (3.49) Mach-dependent drag coefficient and Appendix A nose-cone geometry;
-- standalone minimum-time TPBVP free-flight solver (`bvp4c`);
+- minimum-time TPBVP free-flight solver (`bvp4c`) and experimental Kn=5 hand-off with remaining serial-stage propulsion;
 - stage mass accounting and separation events;
 - launcher configuration validation;
 - bounded trajectory-parameter search;
@@ -69,8 +69,8 @@ The repository combines research from the 2014 thesis, recovered **unfinished de
 - propellant database and stage-volume model;
 - fairing and launcher geometry model;
 - boosters and parallel staging;
-- automatic Kn=5 phase switching from atmospheric propagation into TPBVP;
-- multi-stage propulsion handling inside the restored TPBVP free-flight phase;
+- historical Vega/Proton validation of the implemented Kn=5 phase switch and staged TPBVP free-flight phase;
+- coast-phase timing and final-stage propellant residual handling matching the thesis validation cases;
 - full thesis-quality `Delta-V` coupling (the modern repository now has a first simplified mass/trajectory feedback loop);
 - complete Vega, Proton K and Ariane 5 cases.
 
