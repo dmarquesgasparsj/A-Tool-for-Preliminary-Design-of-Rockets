@@ -121,14 +121,38 @@ traj.cfg = cfg;
 % thesis TPBVP free-flight phase.
 rho_hist=zeros(size(t_hist));
 q_hist=zeros(size(t_hist));
+cd_hist=zeros(size(t_hist));
+mach_hist=zeros(size(t_hist));
+drag_hist=zeros(size(t_hist));
 drag_rate=zeros(size(t_hist));
 gravity_rate=zeros(size(t_hist));
+
+kn_length=NaN;
+kn_threshold=5;
+if isfield(cfg,'knudsen_characteristic_length_m')
+    kn_length=cfg.knudsen_characteristic_length_m;
+end
+if isfield(cfg,'knudsen_transition_threshold')
+    kn_threshold=cfg.knudsen_transition_threshold;
+end
+kn_hist=NaN(size(t_hist));
+mean_free_path_hist=NaN(size(t_hist));
+
 for j=1:numel(t_hist)
     st=stages(stage_index_hist(j));
-    rho_hist(j)=atmosphere(max(0,h(j)));
-    q_hist(j)=0.5*rho_hist(j)*v(j)^2;
-    drag_force=q_hist(j)*st.CdA_m2;
-    drag_rate(j)=drag_force/max(x_hist(j,5),eps);
+    aero=aerodynamic_drag(st,max(0,h(j)),v(j));
+    rho_hist(j)=aero.rho_kg_m3;
+    q_hist(j)=aero.dynamic_pressure_Pa;
+    cd_hist(j)=aero.Cd;
+    mach_hist(j)=aero.mach;
+    drag_hist(j)=aero.drag_N;
+    drag_rate(j)=aero.drag_N/max(x_hist(j,5),eps);
+
+    if isfinite(kn_length)
+        rare=thesis_extended_atmosphere(max(0,h(j)),v(j),kn_length);
+        kn_hist(j)=rare.knudsen;
+        mean_free_path_hist(j)=rare.mean_free_path_m;
+    end
 
     speed=max(v(j),eps);
     g=env.mu/r(j)^2;
@@ -141,6 +165,33 @@ gravity_cumulative=cumtrapz(t_hist,gravity_rate);
 traj.rho = rho_hist;
 traj.dynamic_pressure_Pa = q_hist;
 traj.max_dynamic_pressure_Pa = max(q_hist);
+traj.Cd = cd_hist;
+traj.mach = mach_hist;
+traj.drag_N = drag_hist;
+traj.knudsen = kn_hist;
+traj.mean_free_path_m = mean_free_path_hist;
+traj.knudsen_characteristic_length_m = kn_length;
+traj.knudsen_transition_threshold = kn_threshold;
+
+transition_index=[];
+if isfinite(kn_length)
+    transition_index=find(kn_hist>=kn_threshold,1,'first');
+end
+traj.transition.detected=~isempty(transition_index);
+if isempty(transition_index)
+    traj.transition.index=NaN;
+    traj.transition.time_s=NaN;
+    traj.transition.altitude_m=NaN;
+    traj.transition.knudsen=NaN;
+    traj.transition.stage_index=NaN;
+else
+    traj.transition.index=transition_index;
+    traj.transition.time_s=t_hist(transition_index);
+    traj.transition.altitude_m=h(transition_index);
+    traj.transition.knudsen=kn_hist(transition_index);
+    traj.transition.stage_index=stage_index_hist(transition_index);
+end
+
 traj.losses.drag_m_s = drag_cumulative(end);
 traj.losses.gravity_m_s = gravity_cumulative(end);
 traj.losses.total_m_s = traj.losses.drag_m_s + traj.losses.gravity_m_s;
