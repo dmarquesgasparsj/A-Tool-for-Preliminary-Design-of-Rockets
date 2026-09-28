@@ -30,8 +30,8 @@ Implemented in the modern coupled path:
 
 Still required before calling this a full reproduction of the thesis integrated model:
 
-- thesis Mach-dependent drag law and nose-cone aerodynamics;
-- extended atmosphere / Knudsen-number transition;
+- TPBVP use of the restored Knudsen transition as an actual phase switch;
+- shape-specific nose-cone aerodynamics beyond the thesis-wide Cd(Mach) fit;
 - optimized free-flight TPBVP phase;
 - full launcher geometry and interstage/skin mass;
 - parallel boosters;
@@ -45,7 +45,7 @@ Still required before calling this a full reproduction of the thesis integrated 
 | GUI for non-programmers | Partial | Keep menus, then add a richer MATLAB app only after the scientific API is stable. |
 | Chamber pressure, exit pressure and nozzle geometry in mass/thrust models | Not implemented | Add pressure-aware nozzle sizing and thrust model with explicit units and test cases. |
 | More realistic engine mass model | Partial | Replace the current low-fidelity thrust-based MER with propulsion/pressure/performance-aware alternatives. |
-| More realistic drag model for nose-cone configurations | Not implemented | Implement the Appendix A geometries, Mach-dependent Cd and documented analytical correlations. |
+| More realistic drag model for nose-cone configurations | Partial | Appendix A geometry and thesis-wide Cd(Mach) are implemented; add shape-specific analytical/CFD correlations as a new validated extension. |
 | Trajectory constraints: max-q, heat flux, bending load, axial acceleration | Partial diagnostics | Dynamic pressure is now calculated; constraints and throttle/guidance response are not yet enforced. |
 | More booster options, grain geometry, nose cones and solid propellants | Not implemented | Generalize parallel staging before adding grain-geometry submodels. |
 | Air-launched and initially inclined launchers | Not implemented | Generalize initial altitude, speed, heading and flight-path angle. |
@@ -71,7 +71,7 @@ A full rewrite would make scientific comparison with the thesis harder and incre
 ## Suggested milestones
 
 ### v0.4 — Integrated thesis core
-Complete the mass/trajectory feedback architecture, restore Knudsen and TPBVP flight, and validate Vega and Proton K.
+Complete the mass/trajectory feedback architecture by switching at the now-restored Kn=5 diagnostic into TPBVP free flight, then validate Vega and Proton K.
 
 ### v0.5 — Aerodynamics, propulsion and constraints
 Pressure-aware nozzle/engine models, nose-cone drag, max-q, heat flux, bending and axial-acceleration constraints.
