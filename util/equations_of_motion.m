@@ -21,11 +21,11 @@ else
     ev_th = 0.0;
 end
 
-% Densidade/Arrasto
-h   = max(0, r - env.Re);
-rho = atmosphere(h);
-D   = 0.5 * rho * v^2 * stage.CdA_m2; % magnitude do arrasto
-Dr  = -D * ev_r;
+% Aerodynamics
+h = max(0, r - env.Re);
+aero = aerodynamic_drag(stage,h,v);
+D = aero.drag_N;
+Dr = -D * ev_r;
 Dth = -D * ev_th;
 
 % Empuxo e direção de empuxo

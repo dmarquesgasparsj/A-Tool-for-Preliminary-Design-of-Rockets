@@ -138,13 +138,13 @@ The atmospheric phase used a zero-lift / zero-angle-of-attack gravity turn.
 
 The trajectory state included altitude, downrange, velocity, flight-path angle and mass. The equations were integrated using MATLAB `ode45`.
 
-The thesis used a Mach-dependent drag coefficient and cross-sectional reference area.
+The thesis used a Mach-dependent drag coefficient and cross-sectional reference area. The modern reconstruction now implements Eq. (3.49) directly for generalized stages with known diameter; shape-specific drag remains a Future Work extension.
 
 ### 6.3 Atmospheric transition
 
 The end of the gravity-turn phase was determined with the **Knudsen number**.
 
-The characteristic length was based on the radius of the last stage / nose-cone base. The transition to free flight occurred once the flow was considered sufficiently rarefied for aerodynamic effects to be neglected.
+The characteristic length was based on the radius of the last stage / nose-cone base. The algorithm chapter specifies the end of gravity turn at **Kn = 5**. The thesis defines the characteristic length as the radius of the last stage / nose-cone base. (A recovered development atmosphere routine used a variable named `diam_last`; the modern reconstruction follows the thesis text and keeps this provenance discrepancy documented.)
 
 ### 6.4 Free-flight optimization
 

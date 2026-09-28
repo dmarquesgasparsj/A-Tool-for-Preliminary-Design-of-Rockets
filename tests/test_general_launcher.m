@@ -200,3 +200,64 @@ cfg.stages(1).CdA_m2=NaN;
 verifyError(testCase,@()trajectory_config_from_mass_result(cfg,mass), ...
     'trajectory_config_from_mass_result:MissingAerodynamics');
 end
+
+
+function testThesisMachCdEquation(testCase)
+verifyEqual(testCase,thesis_cd_mach(0),0.0568,'AbsTol',1e-12);
+verifyEqual(testCase,thesis_cd_mach(1),0.445897,'AbsTol',1e-12);
+M=[0 0.5 1 2 3];
+verifySize(testCase,thesis_cd_mach(M),size(M));
+verifyGreaterThan(testCase,min(thesis_cd_mach(M)),0);
+end
+
+function testAppendixANoseConeProfiles(testCase)
+shapes={'ogive','power','ellipse','haack'};
+for i=1:numel(shapes)
+    g=thesis_nose_cone_geometry(shapes{i},4,1);
+    verifyEqual(testCase,g.r_m(1),0,'AbsTol',1e-12);
+    verifyEqual(testCase,g.r_m(end),1,'AbsTol',1e-12);
+    verifyGreaterThan(testCase,g.volume_m3,0);
+    verifyGreaterThan(testCase,g.wetted_area_m2,0);
+    verifyEqual(testCase,g.frontal_area_m2,pi,'RelTol',1e-12);
+end
+cone=thesis_nose_cone_geometry('ogive',4,1,struct('k',0));
+verifyEqual(testCase,cone.r_m,cone.x_m/4,'AbsTol',1e-12);
+vk=thesis_nose_cone_geometry('haack',4,1,struct('k',0));
+verifyEqual(testCase,vk.parameters.k,0);
+end
+
+function testExtendedAtmosphereAndKnudsen(testCase)
+a0=thesis_extended_atmosphere(0,0,1);
+verifyEqual(testCase,a0.pressure_Pa,101325,'RelTol',1e-12);
+verifyEqual(testCase,a0.temperature_K,288.15,'RelTol',1e-12);
+verifyEqual(testCase,a0.rho_kg_m3,101325/(287*288.15),'RelTol',1e-12);
+verifyLessThan(testCase,a0.knudsen,0.01);
+
+alts=[80e3 120e3 200e3];
+a=thesis_extended_atmosphere(alts,[1000 2000 3000],1);
+verifyGreaterThan(testCase,a.knudsen(2),a.knudsen(1));
+verifyGreaterThan(testCase,a.knudsen(3),a.knudsen(2));
+verifyGreaterThan(testCase,a.mean_free_path_m(3),a.mean_free_path_m(1));
+verifyTrue(testCase,all(isfinite(a.mach)));
+end
+
+function testMachDragUsesReferenceArea(testCase)
+stage=struct('drag_model','thesis_mach_polynomial', ...
+    'reference_area_m2',pi,'CdA_m2',NaN);
+a=aerodynamic_drag(stage,0,340);
+expected=0.5*a.rho_kg_m3*340^2*thesis_cd_mach(a.mach)*pi;
+verifyEqual(testCase,a.drag_N,expected,'RelTol',1e-12);
+verifyEqual(testCase,a.Cd,thesis_cd_mach(a.mach),'RelTol',1e-12);
+end
+
+function testGeneralAdapterDefaultsToThesisDrag(testCase)
+cfg=general_launcher_preset('illustrative_two_stage');
+mass=thesis_iterative_mass_model(cfg);
+t=trajectory_config_from_mass_result(cfg,mass);
+verifyEqual(testCase,t.stages(1).drag_model,'thesis_mach_polynomial');
+verifyEqual(testCase,t.stages(1).reference_area_m2, ...
+    pi*cfg.stages(1).diameter_m^2/4,'RelTol',1e-12);
+verifyEqual(testCase,t.knudsen_characteristic_length_m, ...
+    cfg.stages(end).diameter_m/2,'RelTol',1e-12);
+verifyEqual(testCase,t.knudsen_transition_threshold,5);
+end
