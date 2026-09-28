@@ -30,7 +30,7 @@ Implemented in the modern coupled path:
 
 Still required before calling this a full reproduction of the thesis integrated model:
 
-- validate the implemented Kn=5 -> staged TPBVP hand-off against the historical Vega and Proton trajectory cases;
+- resolve/document the Vega atmospheric transition discrepancy (reconstruction Kn=5 timing differs from the reported 97.1 s), then validate the staged TPBVP and Proton case;
 - shape-specific nose-cone aerodynamics beyond the thesis-wide Cd(Mach) fit;
 - full launcher geometry and interstage/skin mass;
 - parallel boosters;
@@ -70,7 +70,7 @@ A full rewrite would make scientific comparison with the thesis harder and incre
 ## Suggested milestones
 
 ### v0.4 — Integrated thesis core
-Validate the implemented three-phase trajectory (vertical/gravity turn -> Kn=5 -> staged TPBVP) against Vega and Proton K, then close remaining coast-phase and final-stage residual details.
+The three-phase architecture is implemented. Vega atmospheric validation now reproduces max-q altitude well but exposes an unresolved Kn-transition timing discrepancy; resolve/document that provenance gap, then validate TPBVP total flight time, Proton K, coast phases and final-stage residual handling.
 
 ### v0.5 — Aerodynamics, propulsion and constraints
 Pressure-aware nozzle/engine models, nose-cone drag, max-q, heat flux, bending and axial-acceleration constraints.
