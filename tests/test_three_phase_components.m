@@ -80,3 +80,24 @@ verifyEqual(testCase,schedule(2).propellant_kg,400);
 verifyEqual(testCase,schedule(1).dry_mass_drop_after_kg,100);
 verifyEqual(testCase,schedule(2).dry_mass_drop_after_kg,0);
 end
+
+
+function testThreePhaseWrapperReportsMissingTransitionCleanly(testCase)
+cfg.name='SHORT-BURN';
+st=struct('name','Short stage','Isp_s',250,'thrust_N',20e3, ...
+    'mp_kg',20,'ms_kg',10,'fs_struct',1/3, ...
+    'CdA_m2',0.1,'reference_area_m2',0.2,'diameter_m',0.4, ...
+    'drag_model','thesis_mach_polynomial');
+cfg.stages=st;
+cfg.knudsen_characteristic_length_m=0.2;
+cfg.knudsen_transition_threshold=5;
+mission=struct('target_alt',200e3,'launch_lat',0, ...
+    'tol_v_ms',50,'tol_gamma',deg2rad(2));
+guidance=struct('t_pitch',5,'pitch_kick',deg2rad(3),'kick_dur',1);
+
+r=simulate_thesis_three_phase_trajectory(cfg,mission,guidance,10);
+verifyFalse(testCase,r.completed);
+verifyFalse(testCase,r.transition.detected);
+verifyNotEmpty(testCase,r.failure_reason);
+verifyGreaterThanOrEqual(testCase,r.losses.drag_m_s,0);
+end
