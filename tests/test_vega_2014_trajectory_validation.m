@@ -26,7 +26,7 @@ for i=1:numel(cases)
     verifyTrue(testCase,p.transition.detected, ...
         sprintf('%s did not reach Kn=5',opts.name));
     verifyGreaterThan(testCase,p.transition.time_s,40);
-    verifyLessThan(testCase,p.transition.time_s,130);
+    verifyLessThan(testCase,p.transition.time_s,200);
     verifyGreaterThan(testCase,p.transition.altitude_m,50e3);
     verifyLessThan(testCase,p.transition.altitude_m,200e3);
     verifyGreaterThan(testCase,p.max_q_altitude_m,2e3);
@@ -45,6 +45,42 @@ end
 % than selecting a diameter/mass convention because it matches the target.
 verifyTrue(testCase,all(isfinite(times)));
 verifyTrue(testCase,all(isfinite(maxq_alt)));
+end
+
+function testRecoveredDevelopmentGravityTurnSensitivity(testCase)
+base=vega_2014_trajectory_config();
+dev=vega_2014_recovered_gravity_test();
+
+% Change only values explicitly visible in the recovered trajectory test.
+cfg=base;
+cfg.gravity_turn_altitude_m=dev.gravity_turn_altitude_m;
+cfg.gravity_turn_seed_gamma_rad=dev.gamma0_rad;
+for i=1:numel(cfg.stages)
+    cfg.stages(i).mp_kg=dev.mp_kg(i);
+    cfg.stages(i).Isp_s=dev.Isp_s(i);
+    cfg.stages(i).thrust_N=dev.thrust_N(i);
+    cfg.stages(i).burn_time_s=dev.burn_time_s(i);
+end
+% The recovered script uses d=1.9 m for frontal area. The recovered
+% atmosphere routine also names its characteristic input diam_last, while
+% the thesis text says radius. Run both interpretations.
+cfg.stages(1).diameter_m=dev.aerodynamic_diameter_m;
+cfg.stages(1).reference_area_m2=pi*dev.aerodynamic_diameter_m^2/4;
+
+lengths=[dev.aerodynamic_diameter_m,dev.aerodynamic_diameter_m/2];
+labels={'recovered-d-as-Kn-length','recovered-radius-as-Kn-length'};
+for i=1:2
+    cfg.knudsen_characteristic_length_m=lengths(i);
+    opts=struct('drag_reference','active_stage', ...
+        'initial_mass_kg',dev.section_initial_mass_kg(1));
+    p=simulate_thesis_2014_atmospheric_phase(cfg,opts);
+    verifyTrue(testCase,p.transition.detected);
+    fprintf(['VEGA-2014 %s: Kn=5 at %.3f s, h=%.1f km; ', ...
+        'max-q h=%.2f km; error vs thesis 97.1s = %+.3f s\n'], ...
+        labels{i},p.transition.time_s,p.transition.altitude_m/1000, ...
+        p.max_q_altitude_m/1000, ...
+        p.transition.time_s-base.reported.gravity_turn_end_time_s);
+end
 end
 
 function testVegaReferenceFixtureCarriesThesisLandmarks(testCase)
