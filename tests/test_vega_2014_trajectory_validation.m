@@ -95,3 +95,39 @@ verifyEqual(testCase,cfg.reported.flight_time_s,357.4, ...
     'AbsTol',1e-12);
 verifyEqual(testCase,cfg.reported.max_q_altitude_approx_m,9000);
 end
+
+
+function testRecoveredKnudsenThresholdSensitivity(testCase)
+base=vega_2014_trajectory_config();
+dev=vega_2014_recovered_gravity_test();
+cfg=base;
+cfg.gravity_turn_altitude_m=dev.gravity_turn_altitude_m;
+cfg.gravity_turn_seed_gamma_rad=dev.gamma0_rad;
+for i=1:numel(cfg.stages)
+    cfg.stages(i).mp_kg=dev.mp_kg(i);
+    cfg.stages(i).Isp_s=dev.Isp_s(i);
+    cfg.stages(i).thrust_N=dev.thrust_N(i);
+    cfg.stages(i).burn_time_s=dev.burn_time_s(i);
+end
+cfg.stages(1).diameter_m=dev.aerodynamic_diameter_m;
+cfg.stages(1).reference_area_m2=pi*dev.aerodynamic_diameter_m^2/4;
+cfg.knudsen_characteristic_length_m=dev.aerodynamic_diameter_m/2;
+
+thresholds=[0.01 0.03 0.1 0.3 1 3 5 10];
+times=zeros(size(thresholds));
+alts=zeros(size(thresholds));
+for i=1:numel(thresholds)
+    cfg.knudsen_threshold=thresholds(i);
+    opts=struct('drag_reference','active_stage', ...
+        'initial_mass_kg',dev.section_initial_mass_kg(1));
+    p=simulate_thesis_2014_atmospheric_phase(cfg,opts);
+    verifyTrue(testCase,p.transition.detected);
+    times(i)=p.transition.time_s;
+    alts(i)=p.transition.altitude_m;
+    fprintf('VEGA-2014 Kn=%g -> t=%.3f s, h=%.1f km, error=%+.3f s\n', ...
+        thresholds(i),times(i),alts(i)/1000, ...
+        times(i)-base.reported.gravity_turn_end_time_s);
+end
+verifyTrue(testCase,all(diff(times)>0));
+verifyTrue(testCase,all(diff(alts)>0));
+end
