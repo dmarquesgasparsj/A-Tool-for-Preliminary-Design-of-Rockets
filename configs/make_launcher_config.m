@@ -35,6 +35,9 @@ else
     validateattributes(mission.orbit_altitude_km, {'numeric'}, ...
         {'scalar','real','finite','nonnegative'});
 end
+if ~isfield(mission,'launch_lat_deg'), mission.launch_lat_deg = 0; end
+validateattributes(mission.launch_lat_deg, {'numeric'}, ...
+    {'scalar','real','finite','>=',-90,'<=',90});
 if ~isfield(mission,'g0'), mission.g0 = 9.80665; end
 validateattributes(mission.g0, {'numeric'}, ...
     {'scalar','real','finite','positive'});
@@ -52,7 +55,7 @@ empty = struct('name','','propellant_name','', ...
     'mixture_ratio_OF',NaN,'rho_oxidizer_kg_m3',NaN, ...
     'rho_fuel_kg_m3',NaN,'diameter_m',NaN, ...
     'fairing_area_m2',NaN,'oxidizer_tank_area_m2',NaN, ...
-    'fuel_tank_area_m2',NaN);
+    'fuel_tank_area_m2',NaN,'Cd_ref',NaN,'CdA_m2',NaN);
 stages = repmat(empty,1,N);
 
 for i = 1:N
@@ -150,7 +153,7 @@ for i = 1:N
         stages(i).epsilon0 = s.epsilon0;
     end
     optional = {'diameter_m','fairing_area_m2', ...
-        'oxidizer_tank_area_m2','fuel_tank_area_m2'};
+        'oxidizer_tank_area_m2','fuel_tank_area_m2','Cd_ref','CdA_m2'};
     for j = 1:numel(optional)
         key = optional{j};
         if isfield(s,key) && ~isempty(s.(key))

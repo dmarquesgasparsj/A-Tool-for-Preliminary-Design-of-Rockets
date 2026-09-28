@@ -17,7 +17,7 @@ run_thesis_sizing(mission,stages) -> thesis_iterative_mass_model.m
                                         +-- thesis_mer_components.m
 ```
 
-`main()` offers the new generalized menu alongside the existing simplified trajectory demonstration. The existing `main(payload_kg, orbit_altitude_km)` and `run_design()` APIs remain available for compatibility; **they are not yet using the modern iterative mass model**.
+`main()` now offers three explicit paths: the experimental integrated mass+trajectory loop, mass-only sizing, and the earlier simplified trajectory demonstration. The existing `main(payload_kg, orbit_altitude_km)` and `run_design()` APIs remain available for compatibility.
 
 The interactive menu is optional. The entire mass calculation can be run from a script or test without windows, global variables or hard-coded filenames.
 
@@ -86,12 +86,20 @@ The **new MER aggregation is a modelling policy**, not a claim that an unfinishe
 
 For liquid and hybrid stages, a separate nozzle mass is not added by default because the engine MER already depends on nozzle area ratio. Fairing and insulation are added when areas are supplied. The tank and casing coefficients are low-fidelity parametric estimates, especially for custom fuels. The separate nozzle rule and hybrid casing rule are modern choices requiring validation.
 
+## Integrated mass / trajectory feedback
+
+`run_integrated_design()` couples the generalized mass model to the current 2D gravity-turn propagator. Each iteration resizes the launcher, propagates the ascent, integrates drag and gravity losses, and updates the total Delta-V budget. The default Delta-V convergence tolerance is 0.01%, matching the value stated in the thesis.
+
+This is an architectural integration milestone, not yet a full reproduction of the thesis trajectory. The current propagator does not yet include the Knudsen transition or TPBVP free-flight phase. The result therefore reports separately whether the Delta-V loop converged and whether the simulated trajectory actually met the requested circular-orbit tolerances.
+
+The trajectory adapter currently uses constant `Cd*A`. If only diameter is supplied, it derives area and uses the stage `Cd_ref` or a temporary default `Cd=0.5`. This placeholder must be replaced by the restored Mach/nose-cone drag model.
+
 ## What this does *not* yet calculate
 
-This is a **generalized serial-stage preliminary mass model**, not yet a complete launcher optimizer. It currently does not calculate:
+This is a **generalized serial-stage preliminary design model**, not yet a complete launcher optimizer. It currently does not calculate:
 
 - parallel boosters or overlapping burns;
-- closed-loop coupled flight trajectory, aerodynamic/gravity losses, or actual orbit insertion;
+- the full thesis Knudsen/TPBVP trajectory and validated orbital insertion (a simplified loss-feedback loop is now implemented);
 - stage skin thickness, interstage structure and full geometry;
 - engine throttle, multi-burn profiles, propellant residuals, or uncertainty margins;
 - an optimum Delta-V allocation (the user supplies the allocation).
@@ -105,3 +113,6 @@ The menu asks for orbit altitude and optional diameter because the mission confi
 - The original thesis's Vega and Proton results are independent targets for future integrated regression tests.
 - Unit and physics-invariant tests run under GitHub Actions on every pull request.
 - Keep legacy behaviour, thesis scientific intent and genuinely new modelling choices separately documented.
+
+
+See [`../ROADMAP.md`](../ROADMAP.md) for the implementation sequence based on the thesis Future Work and for the AI-assisted development policy.

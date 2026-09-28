@@ -116,5 +116,37 @@ traj.payload_kg = payload_mass;
 traj.stage_index = stage_index_hist;
 traj.stage_events = stage_events;
 traj.cfg = cfg;
+% Post-process first-order ascent losses. These diagnostics are used by the
+% modern mass/trajectory coupling loop. They are not a replacement for the
+% thesis TPBVP free-flight phase.
+rho_hist=zeros(size(t_hist));
+q_hist=zeros(size(t_hist));
+drag_rate=zeros(size(t_hist));
+gravity_rate=zeros(size(t_hist));
+for j=1:numel(t_hist)
+    st=stages(stage_index_hist(j));
+    rho_hist(j)=atmosphere(max(0,h(j)));
+    q_hist(j)=0.5*rho_hist(j)*v(j)^2;
+    drag_force=q_hist(j)*st.CdA_m2;
+    drag_rate(j)=drag_force/max(x_hist(j,5),eps);
+
+    speed=max(v(j),eps);
+    g=env.mu/r(j)^2;
+    % Component of gravity opposing an ascending velocity vector.
+    gravity_rate(j)=max(0,g*vr(j)/speed);
+end
+drag_cumulative=cumtrapz(t_hist,drag_rate);
+gravity_cumulative=cumtrapz(t_hist,gravity_rate);
+
+traj.rho = rho_hist;
+traj.dynamic_pressure_Pa = q_hist;
+traj.max_dynamic_pressure_Pa = max(q_hist);
+traj.losses.drag_m_s = drag_cumulative(end);
+traj.losses.gravity_m_s = gravity_cumulative(end);
+traj.losses.total_m_s = traj.losses.drag_m_s + traj.losses.gravity_m_s;
+traj.loss_history.drag_m_s = drag_cumulative;
+traj.loss_history.gravity_m_s = gravity_cumulative;
+traj.loss_history.total_m_s = drag_cumulative + gravity_cumulative;
+
 traj.traj_params = traj_params;
 end
