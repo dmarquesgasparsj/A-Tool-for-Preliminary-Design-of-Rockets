@@ -30,9 +30,8 @@ Implemented in the modern coupled path:
 
 Still required before calling this a full reproduction of the thesis integrated model:
 
-- TPBVP use of the restored Knudsen transition as an actual phase switch;
+- use the restored Kn=5 transition to hand the live ascent state into the now-restored TPBVP solver;
 - shape-specific nose-cone aerodynamics beyond the thesis-wide Cd(Mach) fit;
-- optimized free-flight TPBVP phase;
 - full launcher geometry and interstage/skin mass;
 - parallel boosters;
 - final-stage propellant excess/shortfall handling exactly as intended in the thesis;
@@ -71,7 +70,7 @@ A full rewrite would make scientific comparison with the thesis harder and incre
 ## Suggested milestones
 
 ### v0.4 — Integrated thesis core
-Complete the mass/trajectory feedback architecture by switching at the now-restored Kn=5 diagnostic into TPBVP free flight, then validate Vega and Proton K.
+Complete the mass/trajectory feedback architecture by switching at Kn=5 into the restored TPBVP solver, generalizing that solver across remaining stage events, then validate Vega and Proton K.
 
 ### v0.5 — Aerodynamics, propulsion and constraints
 Pressure-aware nozzle/engine models, nose-cone drag, max-q, heat flux, bending and axial-acceleration constraints.
