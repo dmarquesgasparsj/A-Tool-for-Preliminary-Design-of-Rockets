@@ -90,9 +90,9 @@ For liquid and hybrid stages, a separate nozzle mass is not added by default bec
 
 `run_integrated_design()` couples the generalized mass model to the current 2D gravity-turn propagator. Each iteration resizes the launcher, propagates the ascent, integrates drag and gravity losses, and updates the total Delta-V budget. The default Delta-V convergence tolerance is 0.01%, matching the value stated in the thesis.
 
-This is an architectural integration milestone, not yet a full reproduction of the thesis trajectory. The current propagator does not yet include the Knudsen transition or TPBVP free-flight phase. The result therefore reports separately whether the Delta-V loop converged and whether the simulated trajectory actually met the requested circular-orbit tolerances.
+This is an architectural integration milestone, not yet a full reproduction of the thesis trajectory. The propagator now evaluates the reconstructed extended atmosphere, `Cd(Mach)`, and the thesis **Kn = 5** transition as diagnostics; it does not yet switch into the TPBVP free-flight phase. The result therefore reports separately whether the Delta-V loop converged and whether the simulated trajectory actually met the requested circular-orbit tolerances.
 
-The trajectory adapter currently uses constant `Cd*A`. If only diameter is supplied, it derives area and uses the stage `Cd_ref` or a temporary default `Cd=0.5`. This placeholder must be replaced by the restored Mach/nose-cone drag model.
+The trajectory adapter now defaults to the thesis Eq. (3.49) Mach-dependent `Cd` whenever stage diameter is available. Explicit constant `Cd*A` remains supported for older configurations. Appendix A nose-cone geometries are implemented as geometry utilities, but the 2014 thesis did not provide shape-specific drag correlations; those remain Future Work.
 
 ## What this does *not* yet calculate
 
