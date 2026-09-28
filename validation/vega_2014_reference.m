@@ -11,6 +11,8 @@ ref.reported.GLOW_deviation_percent = 4.8;
 ref.reported.last_stage_propellant_unburned_percent = 34;
 ref.reported.flight_time_s = 357.4;
 ref.reported.gravity_turn_end_time_s = 97.1;
+ref.reported.table6_4_first_stage_m0_kg = 132530;
+ref.reported.max_q_altitude_approx_m = 9000;
 
 names = {'P80','Zefiro 23','Zefiro 9','AVUM'};
 mp = [88365, 23906, 10115, 367];
