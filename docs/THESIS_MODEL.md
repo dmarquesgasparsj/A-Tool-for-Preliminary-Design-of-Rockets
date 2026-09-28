@@ -158,7 +158,7 @@ The formulation contained:
 - a linear-tangent steering law;
 - boundary conditions for circular-orbit altitude, horizontal velocity and zero vertical velocity.
 
-The thesis describes a shooting-method formulation and also reports the use of MATLAB `bvp4c` for the boundary-value solution.
+The thesis describes a shooting-method formulation and also reports the use of MATLAB `bvp4c` for the boundary-value solution. The modern reconstruction now provides `thesis_free_flight_tpbvp.m`, implementing the eight state/costate equations, free final time, `lambda1(tf)=0`, and the minimum-time transversality condition `H(tf)+1=0`. It is currently a single continuous-thrust segment and is not yet connected to the staged atmospheric trajectory.
 
 ## 7. Aerodynamics
 
