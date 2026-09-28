@@ -156,3 +156,47 @@ demo=general_launcher_preset('illustrative_two_stage');
 verifyEqual(testCase,numel(demo.stages),2);
 verifyEqual(testCase,demo.stages(1).propulsion_type,'liquid');
 end
+
+
+function testTrajectoryLossDiagnostics(testCase)
+cfg=validate_config(demo_config());
+mission=struct('target_alt',200e3,'launch_lat',0, ...
+    'tol_v_ms',50,'tol_gamma',deg2rad(2));
+params=struct('t_pitch',20,'pitch_kick',deg2rad(3),'kick_dur',1);
+traj=simulate_gravity_turn(cfg,mission,params,1000);
+verifyGreaterThanOrEqual(testCase,traj.losses.drag_m_s,0);
+verifyGreaterThanOrEqual(testCase,traj.losses.gravity_m_s,0);
+verifyEqual(testCase,traj.losses.total_m_s, ...
+    traj.losses.drag_m_s+traj.losses.gravity_m_s,'RelTol',1e-12);
+verifyGreaterThanOrEqual(testCase,traj.max_dynamic_pressure_Pa,0);
+verifyEqual(testCase,numel(traj.dynamic_pressure_Pa),numel(traj.t));
+end
+
+function testIntegratedDesignProducesCouplingHistory(testCase)
+cfg=general_launcher_preset('illustrative_two_stage');
+opts=struct('max_iterations',12,'relaxation',0.6, ...
+    'delta_v_tolerance',5e-3);
+r=integrated_design(cfg,opts);
+verifyGreaterThanOrEqual(testCase,r.iterations,1);
+verifyTrue(testCase,isfinite(r.required_delta_v_m_s));
+verifyGreaterThan(testCase,r.mass.GLOW_kg,cfg.mission.payload_kg);
+verifyGreaterThan(testCase,r.liftoff_TW,1);
+verifyGreaterThanOrEqual(testCase,r.drag_loss_m_s,0);
+verifyGreaterThanOrEqual(testCase,r.gravity_loss_m_s,0);
+verifyEqual(testCase,numel(r.history),r.iterations);
+verifyEqual(testCase,r.trajectory.m0,r.mass.GLOW_kg,'RelTol',1e-10);
+end
+
+function testTrajectoryAdapterRequiresAerodynamics(testCase)
+cfg=general_launcher_preset('illustrative_two_stage');
+mass=thesis_iterative_mass_model(cfg);
+converted=trajectory_config_from_mass_result(cfg,mass);
+verifyGreaterThan(testCase,converted.stages(1).CdA_m2,0);
+verifyEqual(testCase,converted.stages(1).mp_kg,mass.stages(1).mp_kg, ...
+    'RelTol',1e-12);
+
+cfg.stages(1).diameter_m=NaN;
+cfg.stages(1).CdA_m2=NaN;
+verifyError(testCase,@()trajectory_config_from_mass_result(cfg,mass), ...
+    'trajectory_config_from_mass_result:MissingAerodynamics');
+end
