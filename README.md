@@ -70,27 +70,27 @@ The repository combines research from the 2014 thesis, recovered **unfinished de
 - Mach-dependent drag coefficient from the thesis;
 - Knudsen-number transition criterion;
 - optimized TPBVP free-flight phase;
-- coupled `Delta-V` convergence between mass model and trajectory;
+- full thesis-quality `Delta-V` coupling (the modern repository now has a first simplified mass/trajectory feedback loop);
 - complete Vega, Proton K and Ariane 5 cases.
 
-See [`docs/THESIS_MODEL.md`](docs/THESIS_MODEL.md) for the 2014 architecture and [`docs/RECONSTRUCTION.md`](docs/RECONSTRUCTION.md) for the distinction between recovered thesis functionality and later maintenance.
+See [`docs/THESIS_MODEL.md`](docs/THESIS_MODEL.md) for the 2014 architecture and [`docs/RECONSTRUCTION.md`](docs/RECONSTRUCTION.md) for the distinction between recovered thesis functionality and later maintenance. The development sequence and the original thesis Future Work are tracked in [`ROADMAP.md`](ROADMAP.md), including which 2026 extensions are AI-assisted.
 
 ## Running the current code
 
-For the **new generalized mass model**, open MATLAB in the repository root and run:
+For the **new integrated and generalized model**, open MATLAB in the repository root and run:
 
 ```matlab
 main
 ```
 
-Choose *Generalized launcher sizing*. Its dynamic menus let you configure an arbitrary number of serial stages and select existing or custom propellants. You can also bypass the menus entirely:
+Choose *Integrated mass + trajectory design (experimental)* to run the new Delta-V feedback loop, or *Generalized mass sizing only* to inspect the mass model independently. The menus support an arbitrary number of serial stages and existing or custom propellants. You can also bypass the menus entirely:
 
 ```matlab
 cfg = general_launcher_preset('illustrative_two_stage');
-result = run_thesis_sizing(cfg);
+result = run_integrated_design(cfg);
 ```
 
-For custom missions, use `make_launcher_config(mission, stages)` and `run_thesis_sizing(mission, stages)`. See [Generalized design](docs/GENERALIZED_DESIGN.md) for the complete API and physical assumptions. This is preliminary **mass sizing**: target orbit altitude is metadata until the trajectory and mass models are coupled.
+For custom missions, use `make_launcher_config(mission, stages)` with either `run_integrated_design(mission, stages)` or the mass-only `run_thesis_sizing(mission, stages)`. The coupled model currently uses the simplified 2D gravity-turn propagator: convergence of its Delta-V budget is **not yet equivalent to validation of the full thesis trajectory or successful orbital insertion**.
 
 The earlier simplified trajectory demonstration remains accessible from the second `main` menu option or programmatically:
 
