@@ -55,3 +55,38 @@ verifyError(testCase, ...
     struct('g_m_s2',0,'tf_guess_s',10)), ...
     'thesis_free_flight_tpbvp:MissingPropellantAvailable');
 end
+
+
+function testBuildFreeFlightScheduleStartsAtTransition(testCase)
+st(1)=struct('name','S1','thrust_N',1000,'mp_kg',100, ...
+    'ms_kg',10,'burn_time_s',20);
+st(2)=struct('name','S2','thrust_N',500,'mp_kg',40, ...
+    'ms_kg',5,'burn_time_s',40);
+tr=struct('stage_index',1,'remaining_propellant_kg',25);
+s=build_free_flight_schedule(st,tr);
+verifyEqual(testCase,numel(s),2);
+verifyEqual(testCase,s(1).mdot_kg_s,5,'AbsTol',1e-12);
+verifyEqual(testCase,s(1).duration_s,5,'AbsTol',1e-12);
+verifyEqual(testCase,s(1).dry_mass_drop_after_kg,10);
+verifyEqual(testCase,s(2).duration_s,40,'AbsTol',1e-12);
+verifyEqual(testCase,s(2).dry_mass_drop_after_kg,0);
+end
+
+function testHistoricalTrajectoryAdapter(testCase)
+mission=struct('payload_kg',100,'orbit_altitude_km',200, ...
+    'delta_v_budget_m_s',3000);
+s=struct('name','Solid','propellant_name','custom', ...
+    'propulsion_type','solid','Isp_s',280,'delta_v_fraction',1, ...
+    'thrust_N',200e3,'nozzle_area_ratio',15,'diameter_m',1.5);
+cfg=make_launcher_config(mission,s);
+m=thesis_iterative_mass_model(cfg);
+h=thesis_trajectory_config_from_mass_result(cfg,m);
+verifyEqual(testCase,numel(h.stages),1);
+verifyEqual(testCase,h.payload_kg,100);
+verifyEqual(testCase,h.knudsen_threshold,5);
+verifyEqual(testCase,h.knudsen_characteristic_length_m,0.75, ...
+    'AbsTol',1e-12);
+expected_mdot=s.thrust_N/(s.Isp_s*cfg.mission.g0);
+verifyEqual(testCase,h.stages(1).burn_time_s, ...
+    m.stages(1).mp_kg/expected_mdot,'RelTol',1e-12);
+end
