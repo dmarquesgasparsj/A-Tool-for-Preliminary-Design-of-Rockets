@@ -39,6 +39,11 @@ end
 stages=cfg.stages;
 N=numel(stages);
 m0=cfg.payload_kg+sum([stages.mp_kg])+sum([stages.ms_kg]);
+if isfield(opts,'initial_mass_kg') && ~isempty(opts.initial_mass_kg)
+    validateattributes(opts.initial_mass_kg,{'numeric'}, ...
+        {'scalar','real','finite','positive'});
+    m0=opts.initial_mass_kg;
+end
 g0=opts.g0;
 Re=opts.earth_radius_m;
 Lkn=cfg.knudsen_characteristic_length_m;
@@ -184,7 +189,7 @@ phase.knudsen=Kn;
 phase.max_dynamic_pressure_Pa=q(iq);
 phase.max_q_altitude_m=h_all(iq);
 phase.transition=transition;
-phase.reference_GLOW_kg=m0;
+phase.initial_mass_kg=m0;
 phase.options=opts;
 phase.model_status=[ ...
     'Historical 2014 thesis-mode atmospheric reconstruction using ', ...
