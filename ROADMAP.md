@@ -30,7 +30,7 @@ Implemented in the modern coupled path:
 
 Still required before calling this a full reproduction of the thesis integrated model:
 
-- use the restored Kn=5 transition to hand the live ascent state into the now-restored TPBVP solver;
+- validate the implemented Kn=5 -> staged TPBVP hand-off against the historical Vega and Proton trajectory cases;
 - shape-specific nose-cone aerodynamics beyond the thesis-wide Cd(Mach) fit;
 - full launcher geometry and interstage/skin mass;
 - parallel boosters;
@@ -70,7 +70,7 @@ A full rewrite would make scientific comparison with the thesis harder and incre
 ## Suggested milestones
 
 ### v0.4 — Integrated thesis core
-Complete the mass/trajectory feedback architecture by switching at Kn=5 into the restored TPBVP solver, generalizing that solver across remaining stage events, then validate Vega and Proton K.
+Validate the implemented three-phase trajectory (vertical/gravity turn -> Kn=5 -> staged TPBVP) against Vega and Proton K, then close remaining coast-phase and final-stage residual details.
 
 ### v0.5 — Aerodynamics, propulsion and constraints
 Pressure-aware nozzle/engine models, nose-cone drag, max-q, heat flux, bending and axial-acceleration constraints.
