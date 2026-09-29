@@ -49,6 +49,20 @@ Re=opts.earth_radius_m;
 Lkn=cfg.knudsen_characteristic_length_m;
 threshold=cfg.knudsen_threshold;
 
+coast=zeros(1,max(N-1,0));
+if isfield(cfg,'coast_time_s') && ~isempty(cfg.coast_time_s)
+    raw=cfg.coast_time_s;
+    validateattributes(raw,{'numeric'},{'vector','real','finite','nonnegative'});
+    if isscalar(raw)
+        coast(:)=raw;
+    elseif numel(raw)==N-1
+        coast=reshape(raw,1,[]);
+    else
+        error('simulate_thesis_2014_atmospheric_phase:CoastSize', ...
+            'cfg.coast_time_s must be scalar or contain N-1 values.');
+    end
+end
+
 % Phase A: vertical ascent. State [v; x; h; m].
 state_v=[0;0;opts.initial_altitude_m;m0];
 stage_index=1;
@@ -99,7 +113,8 @@ state=[vgt;gamma0;xgt;hgt;mgt];
 
 transition=struct('detected',false,'time_s',NaN,'altitude_m',NaN, ...
     'velocity_m_s',NaN,'gamma_rad',NaN,'stage_index',NaN, ...
-    'knudsen',NaN,'mass_kg',NaN,'remaining_propellant_kg',NaN);
+    'knudsen',NaN,'mass_kg',NaN,'remaining_propellant_kg',NaN, ...
+    'during_coast',false,'coast_remaining_s',0);
 
 % Continue the active stage from the propellant already consumed vertically.
 while stage_index<=N
@@ -146,15 +161,56 @@ while stage_index<=N
         break;
     end
 
-    % Burnout: drop dry mass. Coast periods are not entered because the
-    % historical atmospheric validation target occurs before Vega P80 burnout.
+    % Burnout and separation. Chapter 3 defines coast phases between
+    % jettison and ignition of the next stage; Chapter 6 uses 3 s coasts
+    % in the Vega/Proton validation cases.
     state=yy(end,:)';
     if stage_index<N
+        previous_stage=stage_index;
+        next_stage=stage_index+1;
         state(5)=state(5)-st.ms_kg;
+
+        if coast(previous_stage)>0
+            t_coast_start=tt(end);
+            t_coast_end=t_coast_start+coast(previous_stage);
+            ode_coast=@(t,y) coast_eom(t,y,next_stage);
+            ev_coast=@(t,y) kn_event(t,y,Lkn,threshold);
+            o_coast=odeset('RelTol',opts.rel_tol,'AbsTol',opts.abs_tol, ...
+                'Events',ev_coast);
+            [tc,yc,tec,yec]=ode45(ode_coast, ...
+                [t_coast_start t_coast_end],state,o_coast);
+            append_gt(tc,yc,next_stage);
+
+            if ~isempty(tec)
+                ytr=yec(end,:)';
+                atm=thesis_extended_atmosphere(ytr(4),ytr(1),Lkn);
+                transition.detected=true;
+                transition.time_s=tec(end);
+                transition.altitude_m=ytr(4);
+                transition.velocity_m_s=ytr(1);
+                transition.gamma_rad=ytr(2);
+                transition.stage_index=next_stage;
+                transition.knudsen=atm.knudsen;
+                transition.mass_kg=ytr(5);
+                transition.remaining_propellant_kg=stages(next_stage).mp_kg;
+                transition.during_coast=true;
+                transition.coast_remaining_s=max(0,t_coast_end-tec(end));
+                state=ytr;
+                break;
+            end
+            state=yc(end,:)';
+            stage_start_t=tc(end);
+        else
+            stage_start_t=tt(end);
+        end
+
+        stage_index=next_stage;
+        stage_burned=0;
+    else
+        stage_index=stage_index+1;
+        stage_burned=0;
+        stage_start_t=tt(end);
     end
-    stage_index=stage_index+1;
-    stage_burned=0;
-    stage_start_t=tt(end);
 end
 
 % Recompute aerodynamic and Kn histories consistently.
@@ -196,18 +252,18 @@ phase.model_status=[ ...
     'Eqs. 3.1-3.4, Eq. 3.49, Eq. 3.55 and Kn=5.'];
 phase.provenance_note=[ ...
     'Recovered RocketDynEq was not available; vertical-to-GT switching ', ...
-    'and drag-area interpretation are explicit reconstruction choices.'];
+    'drag-area interpretation and coast aerodynamics are explicit reconstruction choices.'];
 
     function dy=vertical_eom(~,y,st,mdot)
         v=max(y(1),0); h=max(y(3),0); m=max(y(4),eps);
-        D=drag_force(st,h,v);
+        D=drag_force(stage_index,h,v);
         g=local_g(h);
         dy=[(st.thrust_N-D)/m-g; 0; v; -mdot];
     end
 
     function dy=gravity_turn_eom(~,y,st,mdot)
         v=max(y(1),1e-6); gamma=y(2); h=max(y(4),0); m=max(y(5),eps);
-        D=drag_force(st,h,v);
+        D=drag_force(stage_index,h,v);
         g=local_g(h);
         curvature=v^2/(Re+h);
         dv=(st.thrust_N-D)/m-(g-curvature)*sin(gamma);
@@ -217,8 +273,20 @@ phase.provenance_note=[ ...
         dy=[dv;dgamma;dx;dh;-mdot];
     end
 
-    function D=drag_force(st,h,v)
-        diameter=select_drag_diameter(stages,stage_index,opts.drag_reference);
+    function dy=coast_eom(~,y,aero_stage_index)
+        v=max(y(1),1e-6); gamma=y(2); h=max(y(4),0); m=max(y(5),eps);
+        D=drag_force(aero_stage_index,h,v);
+        g=local_g(h);
+        curvature=v^2/(Re+h);
+        dv=-D/m-(g-curvature)*sin(gamma);
+        dgamma=-(g-curvature)*cos(gamma)/v;
+        dx=v*cos(gamma);
+        dh=v*sin(gamma);
+        dy=[dv;dgamma;dx;dh;0];
+    end
+
+    function D=drag_force(aero_stage_index,h,v)
+        diameter=select_drag_diameter(stages,aero_stage_index,opts.drag_reference);
         area=pi*diameter^2/4;
         atm=thesis_extended_atmosphere(h,v);
         Cdlocal=thesis_cd_mach(atm.mach);
