@@ -33,8 +33,8 @@ Still required before calling this a full reproduction of the thesis integrated 
 - resolve/document the Vega atmospheric transition discrepancy (reconstruction Kn=5 timing differs from the reported 97.1 s), then validate the staged TPBVP and Proton case;
 - shape-specific nose-cone aerodynamics beyond the thesis-wide Cd(Mach) fit;
 - full launcher geometry and interstage/skin mass;
-- parallel boosters;
-- final-stage propellant excess/shortfall handling exactly as intended in the thesis;
+- historical end-to-end booster trajectory coupling and validation;
+- exact treatment of propellant *shortfall* in the lost 2014 final implementation (the documented excess-residual Tsiolkovsky feedback is implemented);
 - Vega, Proton K and Ariane 5 end-to-end validation.
 
 ## Original thesis Future Work
@@ -46,7 +46,7 @@ Still required before calling this a full reproduction of the thesis integrated 
 | More realistic engine mass model | Partial | Replace the current low-fidelity thrust-based MER with propulsion/pressure/performance-aware alternatives. |
 | More realistic drag model for nose-cone configurations | Partial | Appendix A geometry and thesis-wide Cd(Mach) are implemented; add shape-specific analytical/CFD correlations as a new validated extension. |
 | Trajectory constraints: max-q, heat flux, bending load, axial acceleration | Partial diagnostics | Dynamic pressure is now calculated; constraints and throttle/guidance response are not yet enforced. |
-| More booster options, grain geometry, nose cones and solid propellants | Not implemented | Generalize parallel staging before adding grain-geometry submodels. |
+| More booster options, grain geometry, nose cones and solid propellants | **Partial** | Generalized parallel booster sizing/optimization is implemented; next add booster trajectory coupling, grain geometry and broader solid-propellant models. |
 | Air-launched and initially inclined launchers | Not implemented | Generalize initial altitude, speed, heading and flight-path angle. |
 | Cost model | Not implemented / optional | Add only after mass/trajectory validation; keep cost assumptions separate from physics. |
 | GEO transfers, interplanetary trajectories and long coast phases | Not implemented | Add an orbital mission layer after reliable ascent/orbit insertion. |
@@ -70,13 +70,13 @@ A full rewrite would make scientific comparison with the thesis harder and incre
 ## Suggested milestones
 
 ### v0.4 — Integrated thesis core
-The three-phase architecture is implemented. Vega atmospheric validation now reproduces max-q altitude well but exposes an unresolved Kn-transition timing discrepancy; resolve/document that provenance gap, then validate TPBVP total flight time, Proton K, coast phases and final-stage residual handling.
+The three-phase architecture, documented interstage coasts, final-stage residual-propellant Delta-V feedback and generalized parallel-booster sizing are implemented. Vega reproduces max-q altitude but still disagrees on Kn-transition timing/last-stage reserve; the literal Proton Table 6.2 thrust gives T/W < 1, while the recovered development dynamics reach Kn=5 but the staged TPBVP still exposes a singular-Jacobian case. These discrepancies are validation targets, not values to tune away.
 
 ### v0.5 — Aerodynamics, propulsion and constraints
 Pressure-aware nozzle/engine models, nose-cone drag, max-q, heat flux, bending and axial-acceleration constraints.
 
 ### v0.6 — Configuration generalization
-Parallel boosters, more solid propulsion options, inclined/air launch and broader mission initial conditions.
+The generic "zeroth-stage" parallel-booster mass/performance model and a toolbox-free discrete optimizer are implemented. Remaining work: couple boosters into the full trajectory loop, add grain-geometry submodels, inclined/air launch and broader mission initial conditions.
 
 ### v0.7 — Mission and economic extensions
 Cost modelling, GEO transfer, long coast phases and interplanetary mission support.

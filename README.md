@@ -57,6 +57,9 @@ The repository combines research from the 2014 thesis, recovered **unfinished de
 - independent extended atmosphere reconstruction to 2000 km with Mach/Reynolds/Knudsen diagnostics;
 - thesis Eq. (3.49) Mach-dependent drag coefficient and Appendix A nose-cone geometry;
 - minimum-time TPBVP free-flight solver (`bvp4c`) and experimental Kn=5 hand-off with remaining serial-stage propulsion;
+- documented interstage coast phases and final-stage residual-propellant Delta-V feedback;
+- generalized parallel-booster ("zeroth stage") mass/performance sizing and discrete optimization;
+- Ariane 5 original/optimum benchmark fixtures;
 - stage mass accounting and separation events;
 - launcher configuration validation;
 - bounded trajectory-parameter search;
@@ -67,12 +70,12 @@ The repository combines research from the 2014 thesis, recovered **unfinished de
 
 - final end-to-end validation of the modern structural-factor / MER loop against complete thesis launchers;
 - propellant database and stage-volume model;
-- fairing and launcher geometry model;
-- boosters and parallel staging;
+- fairing and launcher geometry / skin-mass model;
+- full booster trajectory coupling and historical Ariane 5 optimization closure;
 - historical Vega/Proton validation of the implemented Kn=5 phase switch and staged TPBVP free-flight phase;
-- coast-phase timing and final-stage propellant residual handling matching the thesis validation cases;
-- full thesis-quality `Delta-V` coupling (the modern repository now has a first simplified mass/trajectory feedback loop);
-- complete Vega, Proton K and Ariane 5 cases.
+- exact recovery of unresolved historical details such as the Proton thrust convention and Ariane 23-point Delta-V path;
+- full thesis-quality `Delta-V` coupling across both serial and parallel staging;
+- complete Vega, Proton K and Ariane 5 end-to-end agreement.
 
 See [`docs/THESIS_MODEL.md`](docs/THESIS_MODEL.md) for the 2014 architecture and [`docs/RECONSTRUCTION.md`](docs/RECONSTRUCTION.md) for the distinction between recovered thesis functionality and later maintenance. The development sequence and the original thesis Future Work are tracked in [`ROADMAP.md`](ROADMAP.md), including which 2026 extensions are AI-assisted.
 
