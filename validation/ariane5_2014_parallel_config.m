@@ -53,15 +53,15 @@ end
 
 core=liquid_stage('EPC/core','LOX/H2',ref.original.core.Isp_s, ...
     core_thrust,ref.original.core.nozzle_area_ratio,core_d);
-upper=liquid_stage('ESC-A/upper','LOX/H2',ref.original.upper.Isp_s, ...
+upper_stage=liquid_stage('ESC-A/upper','LOX/H2',ref.original.upper.Isp_s, ...
     upper_thrust,ref.original.upper.nozzle_area_ratio,upper_d);
 booster=solid_stage('EAP booster','HTPB/AP', ...
     ref.original.boosters.Isp_s,booster_each_thrust, ...
     ref.original.boosters.nozzle_area_ratio,booster_d);
 
-cfg.name=['ARIANE5-2014-' upper(mode)];
+cfg.name=['ARIANE5-2014-' upper(char(mode))];
 cfg.mission=mission;
-cfg.stages=[core upper];
+cfg.stages=[core upper_stage];
 cfg.boosters.count=2;
 cfg.boosters.burn_fraction_of_core=burn_fraction;
 cfg.boosters.stage=booster;
