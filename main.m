@@ -1,12 +1,12 @@
 function main(varargin)
 %MAIN Interactive entry point for the generalized launcher toolkit.
 %
-% main()            offers integrated design, mass-only sizing and the
-%                   earlier simplified trajectory demonstration.
+% main()            offers integrated design, serial mass sizing, parallel
+%                   booster sizing and the earlier trajectory demonstration.
 % main(payload,km)  preserves the original run_design(payload,km) API.
 %
-% Programmatic scientific workflows should call run_integrated_design()
-% or run_thesis_sizing() directly rather than depend on GUI menus.
+% Programmatic scientific workflows should call the dedicated run_* entry
+% points directly rather than depend on GUI menus.
 
 root=fileparts(mfilename('fullpath'));
 addpath(root);
@@ -14,7 +14,8 @@ addpath(root);
 if nargin==0
     choice=menu('A Tool for Preliminary Design of Rockets', ...
         'Integrated mass + trajectory design (experimental)', ...
-        'Generalized mass sizing only', ...
+        'Generalized serial-stage mass sizing', ...
+        'Parallel booster sizing / Ariane 5 benchmark', ...
         'Existing trajectory demo', ...
         'Cancel');
     if choice==1
@@ -23,7 +24,10 @@ if nargin==0
     elseif choice==2
         run_thesis_sizing();
         return;
-    elseif choice==4 || choice==0
+    elseif choice==3
+        run_parallel_booster_sizing();
+        return;
+    elseif choice==5 || choice==0
         return;
     end
 end

@@ -87,14 +87,14 @@ For the **new integrated and generalized model**, open MATLAB in the repository 
 main
 ```
 
-Choose *Integrated mass + trajectory design (experimental)* to run the new Delta-V feedback loop, or *Generalized mass sizing only* to inspect the mass model independently. The menus support an arbitrary number of serial stages and existing or custom propellants. You can also bypass the menus entirely:
+Choose *Integrated mass + trajectory design (experimental)* for the serial mass/trajectory feedback loop, *Generalized serial-stage mass sizing* for mass-only serial design, or *Parallel booster sizing / Ariane 5 benchmark* for the generalized "zeroth-stage" booster model. The booster menu includes the Ariane reference case, the reported 2014 optimum, and a custom N-booster builder. You can also bypass all menus entirely:
 
 ```matlab
 cfg = general_launcher_preset('illustrative_two_stage');
 result = run_integrated_design(cfg);
 ```
 
-For custom missions, use `make_launcher_config(mission, stages)` with either `run_integrated_design(mission, stages)` or the mass-only `run_thesis_sizing(mission, stages)`. The coupled model currently uses the simplified 2D gravity-turn propagator: convergence of its Delta-V budget is **not yet equivalent to validation of the full thesis trajectory or successful orbital insertion**.
+For custom serial missions, use `make_launcher_config(mission, stages)` with either `run_integrated_design(mission, stages)` or `run_thesis_sizing(mission, stages)`. For parallel boosters, build the documented booster configuration struct and call `run_parallel_booster_sizing(cfg)`; `ariane5_2014_parallel_config('reported_optimum')` is an example. The booster path is currently mass/performance sizing only: full booster trajectory coupling remains a validation milestone.
 
 The earlier simplified trajectory demonstration remains accessible from the second `main` menu option or programmatically:
 

@@ -88,3 +88,14 @@ if r.feasible_count>0
     verifyTrue(testCase,r.best_feasible.feasible);
 end
 end
+
+
+function testProgrammaticParallelBoosterRunner(testCase)
+cfg=ariane5_2014_parallel_config('reported_optimum');
+[r,returned]=run_parallel_booster_sizing(cfg,struct( ...
+    'show_plots',false,'delta_v_match_tolerance_m_s',1500));
+verifyEqual(testCase,returned.name,cfg.name);
+verifyGreaterThan(testCase,r.GLOW_kg,cfg.mission.payload_kg);
+verifyEqual(testCase,r.configuration.name,cfg.name);
+verifyEqual(testCase,r.lower.booster_count,2);
+end
