@@ -38,7 +38,7 @@ for k=1:numel(schedule)
         end
     end
     validateattributes(schedule(k).thrust_N,{'numeric'}, ...
-        {'scalar','real','finite','positive'});
+        {'scalar','real','finite','nonnegative'});
     validateattributes(schedule(k).mdot_kg_s,{'numeric'}, ...
         {'scalar','real','finite','nonnegative'});
     validateattributes(schedule(k).duration_s,{'numeric'}, ...
@@ -129,7 +129,19 @@ result.steering_unit=[ux;uy];
 result.boundary_residual=bcres;
 result.max_boundary_residual=max(abs(bcres));
 result.final_hamiltonian=hamiltonian(Y(:,end),tf);
+segment_elapsed=zeros(1,numel(schedule));
+segment_propellant_used=zeros(1,numel(schedule));
+elapsed_total=0;
+for kk=1:numel(schedule)
+    used=max(0,min(schedule(kk).duration_s,tf-elapsed_total));
+    segment_elapsed(kk)=used;
+    segment_propellant_used(kk)=schedule(kk).mdot_kg_s*used;
+    elapsed_total=elapsed_total+schedule(kk).duration_s;
+end
 result.schedule=schedule;
+result.segment_elapsed_s=segment_elapsed;
+result.segment_propellant_used_kg=segment_propellant_used;
+result.propellant_used_kg=sum(segment_propellant_used);
 result.max_available_burn_time_s=max_time;
 result.burn_fraction=tf/max_time;
 result.g_m_s2=g;
@@ -175,6 +187,12 @@ result.model_status=[ ...
 
         [m0,T0]=vehicle_at(0);
         a0=T0/m0;
+        if a0<=0
+            % The transition may occur during a short coast. Use the first
+            % subsequent powered segment only to seed the steering guess.
+            powered=find([schedule.thrust_N]>0,1,'first');
+            if ~isempty(powered), a0=schedule(powered).thrust_N/m0; end
+        end
         ax=(target.vx_m_s-initial.vx_m_s)/max(tf_guess,eps);
         ay=(target.vy_m_s-initial.vy_m_s)/max(tf_guess,eps)+g;
         an=hypot(ax,ay);
