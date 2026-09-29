@@ -48,7 +48,11 @@ target.y_m=target_alt;
 target.vx_m_s=target_v;
 target.vy_m_s=0;
 
-schedule=build_free_flight_schedule(hcfg.stages,atm.transition);
+schedule_opts=struct();
+if isfield(hcfg,'coast_time_s')
+    schedule_opts.coast_time_s=hcfg.coast_time_s;
+end
+schedule=build_free_flight_schedule(hcfg.stages,atm.transition,schedule_opts);
 result.schedule=schedule;
 result.initial_free_flight=initial;
 result.target=target;
@@ -69,10 +73,30 @@ result.orbit_reached=free.converged && ...
     abs(free.vy_m_s(end)-target.vy_m_s)<=1;
 result.total_time_s=atm.transition.time_s+free.tf_s;
 result.final_mass_kg=free.mass_kg(end);
-result.free_flight_propellant_used_kg=initial.mass_kg-free.mass_kg(end);
+result.free_flight_propellant_used_kg=free.propellant_used_kg;
+
+N=numel(hcfg.stages);
+last_available=0;
+last_used=0;
+for k=1:numel(schedule)
+    if schedule(k).source_stage_index==N && schedule(k).mdot_kg_s>0
+        last_available=last_available + ...
+            schedule(k).mdot_kg_s*schedule(k).duration_s;
+        last_used=last_used + free.segment_propellant_used_kg(k);
+    end
+end
+result.last_stage_propellant_available_kg=last_available;
+result.last_stage_propellant_used_kg=last_used;
+result.last_stage_propellant_remaining_kg=max(0,last_available-last_used);
+if hcfg.stages(N).mp_kg>0
+    result.last_stage_propellant_remaining_fraction= ...
+        result.last_stage_propellant_remaining_kg/hcfg.stages(N).mp_kg;
+else
+    result.last_stage_propellant_remaining_fraction=NaN;
+end
 result.status='Atmospheric Knudsen phase and staged free-flight TPBVP completed.';
 result.model_status=[ ...
     '2014 trajectory reconstruction: vertical ascent + gravity turn + ', ...
-    'Knudsen transition + minimum-time staged TPBVP. Coast phases and ', ...
-    'end-to-end historical validation remain pending.'];
+    'Knudsen transition + documented coast phases + minimum-time staged ', ...
+    'TPBVP. End-to-end historical validation remains pending.'];
 end
