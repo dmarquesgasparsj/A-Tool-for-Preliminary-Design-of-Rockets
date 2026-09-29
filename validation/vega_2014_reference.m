@@ -8,11 +8,15 @@ function ref = vega_2014_reference()
 ref.mission.payload_kg = 1500;
 ref.mission.orbit_altitude_m = 700e3;
 ref.reported.GLOW_deviation_percent = 4.8;
-ref.reported.last_stage_propellant_unburned_percent = 34;
+ref.reported.trajectory_validation_last_stage_unburned_percent = 34;
+ref.reported.last_stage_propellant_unburned_percent = 34; % legacy field name
 ref.reported.flight_time_s = 357.4;
 ref.reported.gravity_turn_end_time_s = 97.1;
 ref.reported.table6_4_first_stage_m0_kg = 132530;
 ref.reported.max_q_altitude_approx_m = 9000;
+ref.reported.coast_time_s = [3 3 3];
+ref.reported.table6_4_reference_glow_kg = 132530;
+ref.reported.table6_4_simulated_glow_kg = 126085;
 
 names = {'P80','Zefiro 23','Zefiro 9','AVUM'};
 mp = [88365, 23906, 10115, 367];

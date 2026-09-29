@@ -13,6 +13,7 @@ if ~isfield(opts,'gravity_turn_altitude_m'), opts.gravity_turn_altitude_m=500; e
 if ~isfield(opts,'gravity_turn_seed_gamma_deg'), opts.gravity_turn_seed_gamma_deg=89.5; end
 if ~isfield(opts,'knudsen_threshold'), opts.knudsen_threshold=5; end
 if ~isfield(opts,'g0'), opts.g0=9.80665; end
+if ~isfield(opts,'coast_time_s'), opts.coast_time_s=0; end
 
 if numel(cfg.stages)~=numel(mass_result.stages)
     error('thesis_trajectory_config_from_mass_result:StageCount', ...
@@ -51,6 +52,17 @@ hcfg.gravity_turn_altitude_m=opts.gravity_turn_altitude_m;
 hcfg.gravity_turn_seed_gamma_rad=deg2rad(opts.gravity_turn_seed_gamma_deg);
 hcfg.knudsen_threshold=opts.knudsen_threshold;
 hcfg.knudsen_characteristic_length_m=stages(end).diameter_m/2;
+if N>1
+    if isscalar(opts.coast_time_s)
+        hcfg.coast_time_s=repmat(opts.coast_time_s,1,N-1);
+    else
+        validateattributes(opts.coast_time_s,{'numeric'}, ...
+            {'vector','real','finite','nonnegative','numel',N-1});
+        hcfg.coast_time_s=reshape(opts.coast_time_s,1,[]);
+    end
+else
+    hcfg.coast_time_s=[];
+end
 hcfg.source=['Adapter from generalized mass model to historical 2014 ', ...
     'atmospheric/TPBVP trajectory reconstruction.'];
 end
