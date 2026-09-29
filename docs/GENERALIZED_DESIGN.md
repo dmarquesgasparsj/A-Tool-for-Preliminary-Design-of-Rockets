@@ -23,7 +23,7 @@ The interactive menu is optional. The entire mass calculation can be run from a 
 
 ## Stage count and propellants
 
-The mathematical model accepts any **positive integer number of serial stages**. Practical feasibility is constrained by the mass-ratio equations and the selected MER assumptions, not by branches like `propellant_2`, `propellant_3` and `propellant_4`.
+The serial model accepts any **positive integer number of stages**. In addition, the modern 2026 implementation now supports a generalized booster-assisted first/core stage: an arbitrary positive booster count burns in parallel with the core (the thesis "zeroth stage"), the empty boosters are jettisoned, and the core then continues alone. Practical feasibility is constrained by the mass-ratio equations and MER assumptions, not by separate 2/3/4-stage functions.
 
 Every stage can set:
 
@@ -86,6 +86,20 @@ The **new MER aggregation is a modelling policy**, not a claim that an unfinishe
 
 For liquid and hybrid stages, a separate nozzle mass is not added by default because the engine MER already depends on nozzle area ratio. Fairing and insulation are added when areas are supplied. The tank and casing coefficients are low-fidelity parametric estimates, especially for custom fuels. The separate nozzle rule and hybrid casing rule are modern choices requiring validation.
 
+## Parallel boosters and the thesis "zeroth stage"
+
+The new booster path is deliberately separate from the lost final 2014 implementation. `parallel_booster_performance()` performs direct mass accounting for the simultaneous booster+core burn, booster jettison and subsequent core-only burn. `size_parallel_booster_core()` solves the core structural factor against the modern MER model and sizes each physical solid booster independently before multiplying by the booster count. This avoids applying nonlinear nozzle/avionics relations to an aggregate pair as though it were one motor.
+
+`size_parallel_booster_launcher()` combines that lower system with arbitrary serial upper stages. Its Delta-V vector is explicit:
+
+```text
+[booster-parallel phase, core-only phase, upper stage 1, ...]
+```
+
+The allocated booster-phase Delta-V is a **target**; the actual value is predicted from count, thrust, Isp and burn fraction. The discrete `optimize_parallel_booster_launcher()` searches user-supplied grids and selects minimum GLOW only among candidates that satisfy the Delta-V match and lift-off T/W criteria.
+
+The Ariane 5 Chapter 6 benchmark is mapped through `ariane5_2014_parallel_config()`. The reported 8000 kN optimum is treated as thrust **per booster** because two such boosters give 16,000 kN, consistent with the +14% upper end of the approximately 14,000 kN pair-total reference. This is a documented reconstruction inference, not a silent alteration of Table 6.10.
+
 ## Integrated mass / trajectory feedback
 
 `run_integrated_design()` couples the generalized mass model to the current 2D gravity-turn propagator. Each iteration resizes the launcher, propagates the ascent, integrates drag and gravity losses, and updates the total Delta-V budget. The default Delta-V convergence tolerance is 0.01%, matching the value stated in the thesis.
@@ -98,11 +112,11 @@ The trajectory adapter now defaults to the thesis Eq. (3.49) Mach-dependent `Cd`
 
 This is a **generalized serial-stage preliminary design model**, not yet a complete launcher optimizer. It currently does not calculate:
 
-- parallel boosters or overlapping burns;
-- historical validation of the new Kn=5 -> staged TPBVP trajectory against Vega and Proton K, including coast times and final-stage residual handling;
+- full trajectory coupling for parallel boosters/overlapping burns (mass/performance sizing is implemented);
+- historical closure of the Kn=5 -> staged TPBVP trajectory against Vega and Proton K;
 - stage skin thickness, interstage structure and full geometry;
-- engine throttle, multi-burn profiles, propellant residuals, or uncertainty margins;
-- an optimum Delta-V allocation (the user supplies the allocation).
+- engine throttle, multi-burn profiles and uncertainty margins;
+- automatic continuous Delta-V allocation (the discrete booster optimizer can search user-supplied allocations, but does not invent the missing historical 23-point Ariane sequence).
 
 The menu asks for orbit altitude and optional diameter because the mission configuration will be reused by the future full model. Until mass and trajectory are coupled, **orbit altitude is informational** and Delta-V is explicitly prescribed. A converged mass calculation is not evidence that an orbit is achievable.
 
