@@ -76,6 +76,13 @@ v=reshape(traj.v,1,[]);
 h=reshape(traj.h,1,[]);
 m=reshape(traj.m,1,[]);
 idx=reshape(traj.stage_index,1,[]);
+if isfield(traj,'powered') && numel(traj.powered)==n
+    powered=logical(reshape(traj.powered,1,[]));
+else
+    % Backward compatibility for trajectory producers that predate the
+    % explicit powered/coast history.
+    powered=true(1,n);
+end
 
 if isfield(traj,'dynamic_pressure_Pa') && ...
         numel(traj.dynamic_pressure_Pa)==n
@@ -132,7 +139,11 @@ for j=1:n
     A=pi*st.diameter_m^2/4;
     drag(j)=q(j)*Cd(j)*A;
     atm=thesis_extended_atmosphere(max(0,h(j)),max(0,v(j)));
-    [thrust(j),~]=stage_thrust_at_ambient(st,atm.pressure_Pa);
+    if powered(j)
+        [thrust(j),~]=stage_thrust_at_ambient(st,atm.pressure_Pa);
+    else
+        thrust(j)=0;
+    end
     axial_g(j)=(thrust(j)-drag(j))/max(m(j),eps)/opts.g0;
     normal(j)=q(j)*A*Cn*abs(alpha(j));
     if isfinite(lever(j)) && lever(j)>=0
@@ -169,6 +180,7 @@ c.dynamic_pressure_Pa=q;
 c.heat_flux_W_m2=heat;
 c.drag_N=drag;
 c.thrust_N=thrust;
+c.powered=powered;
 c.axial_accel_g=axial_g;
 c.normal_force_N=normal;
 c.bending_moment_Nm=bending;
