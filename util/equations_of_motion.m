@@ -2,7 +2,7 @@ function dstatedt = equations_of_motion(t, state, env, stage, guidance)
 % EQUATIONS_OF_MOTION — EDOs 2D polar para voo com *gravity turn* e arrasto.
 % state = [r; theta; vr; vtheta; m]
 % env   = struct com campos: mu, Re, g0
-% stage = struct do estágio atual: thrust_N, Isp_s, CdA_m2
+% stage = struct do estágio atual: thrust_N, Isp_s, CdA_m2 and optional thrust_misalignment_rad
 % guidance = função handle u = guidance(t, state) que devolve [ur, utheta] (vetor unitário de empuxo)
 
 r      = state(1);
@@ -30,6 +30,10 @@ Dth = -D * ev_th;
 
 % Empuxo e direção de empuxo
 u = guidance(t, state); % vetor unitário [ur, utheta]
+if isfield(stage,'thrust_misalignment_rad') && ...
+        ~isempty(stage.thrust_misalignment_rad)
+    u=apply_thrust_misalignment(u,stage.thrust_misalignment_rad);
+end
 T   = stage.thrust_N;
 Tr  = T * u(1);
 Tth = T * u(2);
