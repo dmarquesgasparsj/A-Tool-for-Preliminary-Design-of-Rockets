@@ -2,7 +2,8 @@ function phase = propagate_to_knudsen_transition(cfg,mission,traj_params,payload
 %PROPAGATE_TO_KNUDSEN_TRANSITION Powered atmospheric ascent to Kn = threshold.
 %
 % Integrates the same staged 2D polar equations used by
-% simulate_gravity_turn, but terminates exactly when the reconstructed
+% simulate_gravity_turn, including generalized inclined/air-launch initial
+% conditions, but terminates exactly when the reconstructed
 % Knudsen number reaches cfg.knudsen_transition_threshold (default 5).
 %
 % The returned transition state retains the currently burning stage and its
@@ -31,25 +32,13 @@ for k=1:numel(required_mission)
             'Mission is missing %s.',required_mission{k});
     end
 end
-required_guidance={'t_pitch','pitch_kick','kick_dur'};
-for k=1:numel(required_guidance)
-    if ~isfield(traj_params,required_guidance{k})
-        error('propagate_to_knudsen_transition:Guidance', ...
-            'Trajectory parameters are missing %s.',required_guidance{k});
-    end
-end
-
 env=earth_constants();
 stages=cfg.stages;
 N=numel(stages);
 m0=payload_mass+sum([stages.mp_kg])+sum([stages.ms_kg]);
-v0_east=env.omega*env.Re*cos(mission.launch_lat);
-state=[env.Re;0;0;v0_east;m0];
-
-gpar=struct('t_pitch',traj_params.t_pitch, ...
-    'kick_dur',traj_params.kick_dur, ...
-    'kick_ang',traj_params.pitch_kick);
-ufun=guidance_profiles('vertical-then-kick-then-gravity-turn',gpar);
+init=launch_initial_conditions(mission,m0);
+state=init.state;
+[ufun,guidance_meta]=launch_guidance(mission,traj_params,init);
 
 t0=0;
 t_hist=[];
@@ -191,6 +180,8 @@ phase.cfg=cfg;
 phase.traj_params=traj_params;
 phase.payload_kg=payload_mass;
 phase.m0=m0;
+phase.initial_conditions=init;
+phase.guidance=guidance_meta;
 end
 
 function [value,isterminal,direction]=kn_event(~,x,Lkn,threshold,env)
