@@ -104,7 +104,7 @@ result = run_integrated_design(cfg);
 
 For custom serial missions, use `make_launcher_config(mission, stages)` with either `run_integrated_design(mission, stages)` or `run_thesis_sizing(mission, stages)`. For parallel boosters, build the documented booster configuration struct and call `run_parallel_booster_sizing(cfg)`; `ariane5_2014_parallel_config('reported_optimum')` is an example. Booster trajectory coupling is implemented experimentally, while historical Ariane end-to-end closure remains a validation milestone.
 
-The earlier simplified trajectory demonstration remains accessible from the second `main` menu option or programmatically:
+The earlier simplified trajectory demonstration remains accessible from the *Existing trajectory demo* option in `main` or programmatically:
 
 ```matlab
 [result, history] = run_design(1000, 200);
