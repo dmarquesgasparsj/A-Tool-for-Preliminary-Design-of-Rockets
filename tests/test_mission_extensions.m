@@ -235,3 +235,17 @@ dir=u(0,init.state);
 expected=[sin(deg2rad(10));cos(deg2rad(10))];
 verifyEqual(testCase,dir,expected,'AbsTol',1e-12);
 end
+
+
+function testMisalignmentSurvivesMassToTrajectoryAdapter(testCase)
+mission=struct('payload_kg',100,'delta_v_budget_m_s',1500, ...
+    'orbit_altitude_km',100);
+s=struct('name','S','propellant_name','HTPB/AP', ...
+    'delta_v_fraction',1,'thrust_N',150e3,'nozzle_area_ratio',12, ...
+    'diameter_m',2,'thrust_misalignment_rad',0.02);
+cfg=make_launcher_config(mission,s);
+mass=thesis_iterative_mass_model(cfg);
+tcfg=trajectory_config_from_mass_result(cfg,mass);
+verifyEqual(testCase,tcfg.stages.thrust_misalignment_rad,0.02, ...
+    'AbsTol',1e-12);
+end
