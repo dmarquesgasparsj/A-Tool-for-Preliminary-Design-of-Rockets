@@ -210,8 +210,15 @@ phase.Cd=Cd;
 phase.mach=Mach;
 phase.knudsen=Kn;
 phase.max_dynamic_pressure_Pa=max(q);
-phase.losses.drag_m_s=trapz(t_hist,drag_rate);
-phase.losses.gravity_m_s=trapz(t_hist,gravity_rate);
+if numel(t_hist)<2
+    % Immediate Kn hand-off at launch: no elapsed atmospheric time means
+    % zero integrated drag/gravity loss by definition.
+    phase.losses.drag_m_s=0;
+    phase.losses.gravity_m_s=0;
+else
+    phase.losses.drag_m_s=trapz(t_hist,drag_rate);
+    phase.losses.gravity_m_s=trapz(t_hist,gravity_rate);
+end
 phase.losses.total_m_s=phase.losses.drag_m_s+phase.losses.gravity_m_s;
 phase.transition=transition;
 phase.stage_events=events;
