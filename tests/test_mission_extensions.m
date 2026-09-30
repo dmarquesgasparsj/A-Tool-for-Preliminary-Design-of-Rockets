@@ -223,3 +223,15 @@ verifyEqual(testCase,p.transition.burned_propellant_kg,0,'AbsTol',0);
 verifyEqual(testCase,p.transition.remaining_propellant_kg, ...
     cfg.stages(1).mp_kg,'RelTol',1e-12);
 end
+
+
+function testAirLaunchGravityTurnAlignsWithAirRelativeVelocity(testCase)
+m=struct('launch_lat',0,'initial_altitude_m',12000, ...
+    'initial_speed_m_s',250,'initial_flight_path_angle_deg',10, ...
+    'include_earth_rotation',true);
+init=launch_initial_conditions(m,1000);
+[u,~]=launch_guidance(m,struct('initial_angle_hold_s',0),init);
+dir=u(0,init.state);
+expected=[sin(deg2rad(10));cos(deg2rad(10))];
+verifyEqual(testCase,dir,expected,'AbsTol',1e-12);
+end
