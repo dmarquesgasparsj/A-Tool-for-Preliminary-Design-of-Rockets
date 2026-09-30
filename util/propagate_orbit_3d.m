@@ -41,6 +41,7 @@ out.radius_m=rmag;
 out.altitude_m=rmag-env.Re;
 out.speed_m_s=vmag;
 out.specific_energy_J_kg=energy;
+out.energy_definition='two-body central-potential specific energy only';
 out.include_J2=logical(opts.include_J2);
 out.duration_s=duration_s;
 out.initial=initial;
