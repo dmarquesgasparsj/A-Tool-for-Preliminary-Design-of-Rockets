@@ -47,10 +47,10 @@ Still required before calling this a full reproduction of the thesis integrated 
 | More realistic drag model for nose-cone configurations | Partial | Appendix A geometry and thesis-wide Cd(Mach) are implemented; add shape-specific analytical/CFD correlations as a new validated extension. |
 | Trajectory constraints: max-q, heat flux, bending load, axial acceleration | **Implemented as evaluators** | Max-q, Sutton-Graves heat flux, preliminary bending and axial acceleration limits return pass/fail. Active throttle/guidance response to violations remains future work. |
 | More booster options, grain geometry, nose cones and solid propellants | **Partial / advanced** | Generalized parallel booster sizing and trajectory coupling are implemented; next add grain-geometry submodels and broader solid-propellant models. |
-| Air-launched and initially inclined launchers | Not implemented | Generalize initial altitude, speed, heading and flight-path angle. |
-| Cost model | Not implemented / optional | Add only after mass/trajectory validation; keep cost assumptions separate from physics. |
-| GEO transfers, interplanetary trajectories and long coast phases | Not implemented | Add an orbital mission layer after reliable ascent/orbit insertion. |
-| Thrust misalignment, non-spherical Earth gravity, Moon/Sun perturbations | Not implemented | Add progressively: thrust-vector errors, J2, then third-body gravity where mission duration justifies it. |
+| Air-launched and initially inclined launchers | **Implemented / experimental** | Generalized initial altitude, speed and flight-path angle are implemented while preserving the historical ground-launch default; next add full 3D heading/azimuth and carrier-release validation. |
+| Cost model | **Implemented as transparent CER framework** | Development, production, operations and learning-curve terms are implemented. Normalized defaults are dimensionless; monetary estimates require a calibrated external CER dataset. |
+| GEO transfers, interplanetary trajectories and long coast phases | **Implemented / preliminary** | Hohmann GEO, patched-conic interplanetary estimates and 3D long-coast propagation are implemented; next add Lambert/ephemeris targeting and capture manoeuvres. |
+| Thrust misalignment, non-spherical Earth gravity, Moon/Sun perturbations | **Partial / implemented through J2** | Deterministic thrust misalignment and optional Earth J2 are implemented; Moon/Sun third-body gravity and stochastic pointing-error Monte Carlo remain future work. |
 | Rewrite in C/C++ for speed | Deferred / conditional | Profile MATLAB first. Use vectorization, parallel execution or selective MEX/C++ only for measured bottlenecks. |
 
 ## Why C/C++ is no longer an automatic priority
@@ -79,10 +79,10 @@ Pressure-aware nozzle geometry/thrust and max-q, heat-flux, bending and axial-ac
 The generic "zeroth-stage" parallel-booster mass/performance model and a toolbox-free discrete optimizer are implemented. Remaining work: couple boosters into the full trajectory loop, add grain-geometry submodels, inclined/air launch and broader mission initial conditions.
 
 ### v0.7 — Mission and economic extensions
-Cost modelling, GEO transfer, long coast phases and interplanetary mission support.
+Inclined/air-launch initial conditions, transparent CER cost modelling, GEO Hohmann transfer, interplanetary Hohmann/patched-conic analysis and long-coast 3D propagation are implemented. Remaining work: ephemeris/Lambert targeting, arrival/capture manoeuvres and calibrated monetary CER datasets.
 
 ### v0.8 — Higher-fidelity dynamics
-Thrust misalignment, J2 and, where relevant, lunar/solar third-body effects.
+Deterministic thrust misalignment and Earth J2 are implemented. Remaining work: 3D ascent heading/azimuth, stochastic pointing errors and, where mission duration justifies it, lunar/solar third-body effects.
 
 ### v1.0 — Validated open design tool
 Documented end-to-end validation, reproducible examples, stable API/GUI and performance profiling. Selective native-code acceleration only if benchmarks justify it.
