@@ -55,7 +55,10 @@ empty = struct('name','','propellant_name','', ...
     'mixture_ratio_OF',NaN,'rho_oxidizer_kg_m3',NaN, ...
     'rho_fuel_kg_m3',NaN,'diameter_m',NaN, ...
     'fairing_area_m2',NaN,'oxidizer_tank_area_m2',NaN, ...
-    'fuel_tank_area_m2',NaN,'Cd_ref',NaN,'CdA_m2',NaN);
+    'fuel_tank_area_m2',NaN,'Cd_ref',NaN,'CdA_m2',NaN, ...
+    'propellant_bulk_density_kg_m3',NaN,'include_skin_mass',false, ...
+    'skin_model',struct(),'pressure_nozzle',struct(), ...
+    'add_pressure_nozzle_shell_mass',false);
 stages = repmat(empty,1,N);
 
 for i = 1:N
@@ -162,6 +165,36 @@ for i = 1:N
             stages(i).(key) = s.(key);
         end
     end
+
+    if isfield(s,'propellant_bulk_density_kg_m3') && ...
+            ~isempty(s.propellant_bulk_density_kg_m3)
+        validateattributes(s.propellant_bulk_density_kg_m3,{'numeric'}, ...
+            {'scalar','real','finite','positive'});
+        stages(i).propellant_bulk_density_kg_m3 = ...
+            s.propellant_bulk_density_kg_m3;
+    end
+    if isfield(s,'include_skin_mass') && ~isempty(s.include_skin_mass)
+        stages(i).include_skin_mass=logical(s.include_skin_mass);
+    end
+    if isfield(s,'skin_model') && ~isempty(s.skin_model)
+        if ~isstruct(s.skin_model) || ~isscalar(s.skin_model)
+            error('make_launcher_config:SkinModel', ...
+                'stage.skin_model must be a scalar struct.');
+        end
+        stages(i).skin_model=s.skin_model;
+    end
+    if isfield(s,'pressure_nozzle') && ~isempty(s.pressure_nozzle)
+        if ~isstruct(s.pressure_nozzle) || ~isscalar(s.pressure_nozzle)
+            error('make_launcher_config:PressureNozzle', ...
+                'stage.pressure_nozzle must be a scalar struct.');
+        end
+        stages(i).pressure_nozzle=s.pressure_nozzle;
+    end
+    if isfield(s,'add_pressure_nozzle_shell_mass') && ...
+            ~isempty(s.add_pressure_nozzle_shell_mass)
+        stages(i).add_pressure_nozzle_shell_mass = ...
+            logical(s.add_pressure_nozzle_shell_mass);
+    end
 end
 
 fractions = [stages.delta_v_fraction];
@@ -173,5 +206,6 @@ end
 cfg.mission = mission;
 cfg.stages = stages;
 cfg.source = 'User-defined modern launcher configuration';
-cfg.model_status = 'Serial stage sizing; parallel boosters not yet coupled';
+cfg.model_status = ['Generalized serial sizing; optional Chapter-5 skin ', ...
+    'and pressure-aware nozzle fields are preserved when supplied.'];
 end
