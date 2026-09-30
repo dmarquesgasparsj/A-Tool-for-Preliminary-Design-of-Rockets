@@ -12,7 +12,11 @@ function components = modern_stage_mer(stage, ms_kg, mp_kg)
 % The engine MER depends on nozzle area ratio, so a separate nozzle MER is
 % *not* added to liquid/hybrid engines by default (avoid double-counting).
 % Fairing and insulation are included only with explicit geometry.
-% This model does not yet estimate skin, interstages or dry-mass margin.
+% Optional Chapter-5 skin mass is enabled only when stage.include_skin_mass
+% is true. Pressure-aware nozzle shell mass is also opt-in because the
+% liquid/hybrid engine MER already contains an area-ratio term and adding
+% a shell mass by default could double-count nozzle hardware.
+% Interstages and dry-mass margin remain separate future components.
 %
 % The thesis coefficients use the H2-tank formula as a fallback for fuels
 % other than RP1, and the LOX-tank formula for other oxidizers. Those
@@ -40,7 +44,8 @@ mer = thesis_mer_components(s,masses,p,geometry);
 components = struct('fuel_tank_kg',0,'oxidizer_tank_kg',0, ...
     'motor_casing_kg',0,'thrust_structure_kg',mer.thrust_structure_kg, ...
     'avionics_kg',mer.avionics_kg,'engine_kg',0,'nozzle_kg',0, ...
-    'insulation_kg',0,'fairing_kg',0,'total_kg',0);
+    'insulation_kg',0,'fairing_kg',0,'skin_kg',0, ...
+    'pressure_nozzle_shell_kg',0,'total_kg',0);
 
 switch lower(stage.propulsion_type)
     case 'solid'
@@ -76,11 +81,49 @@ if isfinite(mer.lh2_insulation_kg) && ...
     components.insulation_kg = components.insulation_kg + ...
         mer.lh2_insulation_kg;
 end
+
+% Chapter 5 geometry / exterior structure (optional modern switch).
+if isfield(stage,'include_skin_mass') && logical(stage.include_skin_mass)
+    skin_opts=struct();
+    if isfield(stage,'skin_model') && isstruct(stage.skin_model)
+        skin_opts=stage.skin_model;
+    end
+    gskin=thesis_stage_geometry_skin(stage,mp_kg,skin_opts);
+    components.skin_kg=gskin.skin_mass_kg;
+    components.geometry=gskin;
+end
+
+% Future Work extension: pressure-aware nozzle geometry/mass. For liquid
+% and hybrid stages this shell is NOT added unless the caller explicitly
+% requests add_pressure_nozzle_shell_mass=true, avoiding hidden double count.
+if isfield(stage,'pressure_nozzle') && isstruct(stage.pressure_nozzle) && ...
+        isfield(stage.pressure_nozzle,'enabled') && stage.pressure_nozzle.enabled
+    pstage=stage;
+    pn=fieldnames(stage.pressure_nozzle);
+    for jj=1:numel(pn)
+        if ~strcmp(pn{jj},'enabled')
+            pstage.(pn{jj})=stage.pressure_nozzle.(pn{jj});
+        end
+    end
+    nozzle_perf=pressure_aware_nozzle(pstage,0);
+    components.pressure_nozzle=nozzle_perf;
+    if isfinite(nozzle_perf.nozzle_shell_mass_kg)
+        if strcmpi(stage.propulsion_type,'solid')
+            components.nozzle_kg=nozzle_perf.nozzle_shell_mass_kg;
+        elseif isfield(stage,'add_pressure_nozzle_shell_mass') && ...
+                logical(stage.add_pressure_nozzle_shell_mass)
+            components.pressure_nozzle_shell_kg=nozzle_perf.nozzle_shell_mass_kg;
+        end
+    end
+end
+
 fields = fieldnames(components);
 total = 0;
 for i = 1:numel(fields)
-    if ~strcmp(fields{i},'total_kg')
-        total = total + components.(fields{i});
+    key=fields{i};
+    if ~strcmp(key,'total_kg') && isnumeric(components.(key)) && ...
+            isscalar(components.(key))
+        total = total + components.(key);
     end
 end
 components.total_kg = total;

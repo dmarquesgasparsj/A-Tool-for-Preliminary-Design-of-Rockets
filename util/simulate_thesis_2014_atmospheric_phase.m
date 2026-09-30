@@ -68,7 +68,7 @@ state_v=[0;0;opts.initial_altitude_m;m0];
 stage_index=1;
 stage_start_t=0;
 stage_burned=0;
-t_all=[]; v_all=[]; gamma_all=[]; x_all=[]; h_all=[]; m_all=[]; idx_all=[];
+t_all=[]; v_all=[]; gamma_all=[]; x_all=[]; h_all=[]; m_all=[]; idx_all=[]; powered_all=[];
 
 % Historical Vega reaches 500 m during stage 1. The generic loop allows
 % stage boundaries should another fixture require them.
@@ -141,7 +141,7 @@ while stage_index<=N
     t_start=t_all(end);
     [tt,yy,te,ye]=ode45(ode,[t_start t_start+remaining_time],state,o);
 
-    append_gt(tt,yy,stage_index);
+    append_gt(tt,yy,stage_index,true);
     burn_this=mdot*(tt(end)-t_start);
     stage_burned=stage_burned+burn_this;
 
@@ -179,7 +179,7 @@ while stage_index<=N
                 'Events',ev_coast);
             [tc,yc,tec,yec]=ode45(ode_coast, ...
                 [t_coast_start t_coast_end],state,o_coast);
-            append_gt(tc,yc,next_stage);
+            append_gt(tc,yc,next_stage,false);
 
             if ~isempty(tec)
                 ytr=yec(end,:)';
@@ -237,6 +237,7 @@ phase.x=x_all;
 phase.h=h_all;
 phase.m=m_all;
 phase.stage_index=idx_all;
+phase.powered=powered_all;
 phase.rho=rho;
 phase.dynamic_pressure_Pa=q;
 phase.Cd=Cd;
@@ -252,21 +253,25 @@ phase.model_status=[ ...
     'Eqs. 3.1-3.4, Eq. 3.49, Eq. 3.55 and Kn=5.'];
 phase.provenance_note=[ ...
     'Recovered RocketDynEq was not available; vertical-to-GT switching ', ...
-    'drag-area interpretation and coast aerodynamics are explicit reconstruction choices.'];
+    'drag-area interpretation and coast aerodynamics are explicit reconstruction choices. Pressure-aware nozzle thrust is used only when explicitly configured.'];
 
     function dy=vertical_eom(~,y,st,mdot)
         v=max(y(1),0); h=max(y(3),0); m=max(y(4),eps);
         D=drag_force(stage_index,h,v);
         g=local_g(h);
-        dy=[(st.thrust_N-D)/m-g; 0; v; -mdot];
+        atm_local=thesis_extended_atmosphere(h,v);
+        Tlocal=stage_thrust_at_ambient(st,atm_local.pressure_Pa);
+        dy=[(Tlocal-D)/m-g; 0; v; -mdot];
     end
 
     function dy=gravity_turn_eom(~,y,st,mdot)
         v=max(y(1),1e-6); gamma=y(2); h=max(y(4),0); m=max(y(5),eps);
         D=drag_force(stage_index,h,v);
         g=local_g(h);
+        atm_local=thesis_extended_atmosphere(h,v);
+        Tlocal=stage_thrust_at_ambient(st,atm_local.pressure_Pa);
         curvature=v^2/(Re+h);
-        dv=(st.thrust_N-D)/m-(g-curvature)*sin(gamma);
+        dv=(Tlocal-D)/m-(g-curvature)*sin(gamma);
         dgamma=-(g-curvature)*cos(gamma)/v;
         dx=v*cos(gamma);
         dh=v*sin(gamma);
@@ -309,9 +314,10 @@ phase.provenance_note=[ ...
         h_all=[h_all;yy(:,3)]; %#ok<AGROW>
         m_all=[m_all;yy(:,4)]; %#ok<AGROW>
         idx_all=[idx_all;repmat(idx,numel(tt),1)]; %#ok<AGROW>
+        powered_all=[powered_all;true(numel(tt),1)]; %#ok<AGROW>
     end
 
-    function append_gt(tt,yy,idx)
+    function append_gt(tt,yy,idx,is_powered)
         if ~isempty(t_all) && ~isempty(tt)
             tt=tt(2:end); yy=yy(2:end,:);
         end
@@ -322,6 +328,7 @@ phase.provenance_note=[ ...
         h_all=[h_all;yy(:,4)]; %#ok<AGROW>
         m_all=[m_all;yy(:,5)]; %#ok<AGROW>
         idx_all=[idx_all;repmat(idx,numel(tt),1)]; %#ok<AGROW>
+        powered_all=[powered_all;repmat(logical(is_powered),numel(tt),1)]; %#ok<AGROW>
     end
 
     function [value,isterminal,direction]=altitude_event(~,y,target_h)
