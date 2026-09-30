@@ -21,6 +21,12 @@ end
 
 env = earth_constants();
 Re = env.Re;
+env.launch_lat = mission.launch_lat;
+if isfield(mission,'include_earth_rotation')
+    env.atmosphere_rotates = logical(mission.include_earth_rotation);
+else
+    env.atmosphere_rotates = true;
+end
 
 stages = cfg.stages;
 N = numel(stages);
@@ -127,9 +133,12 @@ end
 kn_hist=NaN(size(t_hist));
 mean_free_path_hist=NaN(size(t_hist));
 
+air_speed_hist=zeros(size(t_hist));
 for j=1:numel(t_hist)
     st=stages(stage_index_hist(j));
-    aero=aerodynamic_drag(st,max(0,h(j)),v(j));
+    air=atmosphere_relative_velocity_2d(r(j),vr(j),vtheta(j),env);
+    air_speed_hist(j)=air.speed_m_s;
+    aero=aerodynamic_drag(st,max(0,h(j)),air.speed_m_s);
     rho_hist(j)=aero.rho_kg_m3;
     q_hist(j)=aero.dynamic_pressure_Pa;
     cd_hist(j)=aero.Cd;
@@ -138,7 +147,7 @@ for j=1:numel(t_hist)
     drag_rate(j)=aero.drag_N/max(x_hist(j,5),eps);
 
     if isfinite(kn_length)
-        rare=thesis_extended_atmosphere(max(0,h(j)),v(j),kn_length);
+        rare=thesis_extended_atmosphere(max(0,h(j)),air.speed_m_s,kn_length);
         kn_hist(j)=rare.knudsen;
         mean_free_path_hist(j)=rare.mean_free_path_m;
     end
@@ -151,6 +160,7 @@ end
 drag_cumulative=cumtrapz(t_hist,drag_rate);
 gravity_cumulative=cumtrapz(t_hist,gravity_rate);
 
+traj.air_speed_m_s = air_speed_hist;
 traj.rho = rho_hist;
 traj.dynamic_pressure_Pa = q_hist;
 traj.max_dynamic_pressure_Pa = max(q_hist);
