@@ -58,7 +58,10 @@ The repository combines research from the 2014 thesis, recovered **unfinished de
 - thesis Eq. (3.49) Mach-dependent drag coefficient and Appendix A nose-cone geometry;
 - minimum-time TPBVP free-flight solver (`bvp4c`) and experimental Kn=5 hand-off with remaining serial-stage propulsion;
 - documented interstage coast phases and final-stage residual-propellant Delta-V feedback;
-- generalized parallel-booster ("zeroth stage") mass/performance sizing and discrete optimization;
+- generalized parallel-booster ("zeroth stage") mass/performance sizing, discrete optimization and trajectory coupling;
+- optional Chapter-5 stage geometry / exterior skin-mass model;
+- pressure-aware chamber/nozzle model with ambient-pressure thrust;
+- trajectory-constraint evaluation for max-q, heat flux, bending and axial acceleration;
 - Ariane 5 original/optimum benchmark fixtures;
 - stage mass accounting and separation events;
 - launcher configuration validation;
@@ -70,14 +73,14 @@ The repository combines research from the 2014 thesis, recovered **unfinished de
 
 - final end-to-end validation of the modern structural-factor / MER loop against complete thesis launchers;
 - propellant database and stage-volume model;
-- fairing and launcher geometry / skin-mass model;
-- full booster trajectory coupling and historical Ariane 5 optimization closure;
+- complete fairing/interstage structural geometry beyond the implemented cylindrical stage/skin model;
+- historical Ariane 5 end-to-end closure of the implemented booster trajectory coupling;
 - historical Vega/Proton validation of the implemented Kn=5 phase switch and staged TPBVP free-flight phase;
 - exact recovery of unresolved historical details such as the Proton thrust convention and Ariane 23-point Delta-V path;
 - full thesis-quality `Delta-V` coupling across both serial and parallel staging;
 - complete Vega, Proton K and Ariane 5 end-to-end agreement.
 
-See [`docs/THESIS_MODEL.md`](docs/THESIS_MODEL.md) for the 2014 architecture and [`docs/RECONSTRUCTION.md`](docs/RECONSTRUCTION.md) for the distinction between recovered thesis functionality and later maintenance. The development sequence and the original thesis Future Work are tracked in [`ROADMAP.md`](ROADMAP.md), including which 2026 extensions are AI-assisted.
+See [`docs/THESIS_MODEL.md`](docs/THESIS_MODEL.md) for the 2014 architecture and [`docs/RECONSTRUCTION.md`](docs/RECONSTRUCTION.md) for the distinction between recovered thesis functionality and later maintenance. The implemented 2026 Future Work extensions and their provenance are documented in [`docs/FUTURE_WORK_EXTENSIONS.md`](docs/FUTURE_WORK_EXTENSIONS.md). The development sequence and the original thesis Future Work are tracked in [`ROADMAP.md`](ROADMAP.md), including which 2026 extensions are AI-assisted.
 
 ## Running the current code
 
