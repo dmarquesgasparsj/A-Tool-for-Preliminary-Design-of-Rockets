@@ -68,7 +68,7 @@ state_v=[0;0;opts.initial_altitude_m;m0];
 stage_index=1;
 stage_start_t=0;
 stage_burned=0;
-t_all=[]; v_all=[]; gamma_all=[]; x_all=[]; h_all=[]; m_all=[]; idx_all=[];
+t_all=[]; v_all=[]; gamma_all=[]; x_all=[]; h_all=[]; m_all=[]; idx_all=[]; powered_all=[];
 
 % Historical Vega reaches 500 m during stage 1. The generic loop allows
 % stage boundaries should another fixture require them.
@@ -141,7 +141,7 @@ while stage_index<=N
     t_start=t_all(end);
     [tt,yy,te,ye]=ode45(ode,[t_start t_start+remaining_time],state,o);
 
-    append_gt(tt,yy,stage_index);
+    append_gt(tt,yy,stage_index,true);
     burn_this=mdot*(tt(end)-t_start);
     stage_burned=stage_burned+burn_this;
 
@@ -179,7 +179,7 @@ while stage_index<=N
                 'Events',ev_coast);
             [tc,yc,tec,yec]=ode45(ode_coast, ...
                 [t_coast_start t_coast_end],state,o_coast);
-            append_gt(tc,yc,next_stage);
+            append_gt(tc,yc,next_stage,false);
 
             if ~isempty(tec)
                 ytr=yec(end,:)';
@@ -237,6 +237,7 @@ phase.x=x_all;
 phase.h=h_all;
 phase.m=m_all;
 phase.stage_index=idx_all;
+phase.powered=powered_all;
 phase.rho=rho;
 phase.dynamic_pressure_Pa=q;
 phase.Cd=Cd;
@@ -313,9 +314,10 @@ phase.provenance_note=[ ...
         h_all=[h_all;yy(:,3)]; %#ok<AGROW>
         m_all=[m_all;yy(:,4)]; %#ok<AGROW>
         idx_all=[idx_all;repmat(idx,numel(tt),1)]; %#ok<AGROW>
+        powered_all=[powered_all;true(numel(tt),1)]; %#ok<AGROW>
     end
 
-    function append_gt(tt,yy,idx)
+    function append_gt(tt,yy,idx,is_powered)
         if ~isempty(t_all) && ~isempty(tt)
             tt=tt(2:end); yy=yy(2:end,:);
         end
@@ -326,6 +328,7 @@ phase.provenance_note=[ ...
         h_all=[h_all;yy(:,4)]; %#ok<AGROW>
         m_all=[m_all;yy(:,5)]; %#ok<AGROW>
         idx_all=[idx_all;repmat(idx,numel(tt),1)]; %#ok<AGROW>
+        powered_all=[powered_all;repmat(logical(is_powered),numel(tt),1)]; %#ok<AGROW>
     end
 
     function [value,isterminal,direction]=altitude_event(~,y,target_h)
