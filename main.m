@@ -1,8 +1,8 @@
 function main(varargin)
 %MAIN Interactive entry point for the generalized launcher toolkit.
 %
-% main()            offers integrated design, serial mass sizing, parallel
-%                   booster sizing and the earlier trajectory demonstration.
+% main()            offers integrated design, mass sizing, boosters,
+%                   mission extensions and the earlier trajectory demo.
 % main(payload,km)  preserves the original run_design(payload,km) API.
 %
 % Programmatic scientific workflows should call the dedicated run_* entry
@@ -16,6 +16,7 @@ if nargin==0
         'Integrated mass + trajectory design (experimental)', ...
         'Generalized serial-stage mass sizing', ...
         'Parallel booster sizing / Ariane 5 benchmark', ...
+        'Mission / advanced extensions', ...
         'Existing trajectory demo', ...
         'Cancel');
     if choice==1
@@ -27,7 +28,10 @@ if nargin==0
     elseif choice==3
         run_parallel_booster_sizing();
         return;
-    elseif choice==5 || choice==0
+    elseif choice==4
+        run_mission_extensions();
+        return;
+    elseif choice==6 || choice==0
         return;
     end
 end
