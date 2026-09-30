@@ -25,7 +25,14 @@ rT=target_orbit_radius_AU*env.AU_m;
 helio=hohmann_transfer(env.mu_sun,rE,rT);
 
 vEarth=sqrt(env.mu_sun/rE);
-vTarget=sqrt(env.mu_sun/rT);
+if isfield(opts,'target_body_circular_speed_m_s') && ...
+        ~isempty(opts.target_body_circular_speed_m_s)
+    validateattributes(opts.target_body_circular_speed_m_s,{'numeric'}, ...
+        {'scalar','real','finite','positive'});
+    vTarget=opts.target_body_circular_speed_m_s;
+else
+    vTarget=sqrt(env.mu_sun/rT);
+end
 vInfDepart=abs(helio.v_transfer_1_m_s-vEarth);
 vInfArrive=abs(vTarget-helio.v_transfer_2_m_s);
 C3=vInfDepart^2;
@@ -40,6 +47,7 @@ out.parking_altitude_m=parking_altitude_m;
 out.heliocentric_transfer=helio;
 out.departure_v_inf_m_s=vInfDepart;
 out.arrival_v_inf_m_s=vInfArrive;
+out.target_circular_speed_m_s=vTarget;
 out.C3_m2_s2=C3;
 out.C3_km2_s2=C3/1e6;
 out.earth_parking_circular_speed_m_s=vCirc;
