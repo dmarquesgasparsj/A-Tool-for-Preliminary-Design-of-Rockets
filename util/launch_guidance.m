@@ -34,8 +34,14 @@ else
     end
     validateattributes(hold,{'numeric'}, ...
         {'scalar','real','finite','nonnegative'});
+    if isfield(mission,'include_earth_rotation')
+        rotates=logical(mission.include_earth_rotation);
+    else
+        rotates=true;
+    end
     p=struct('initial_gamma_rad',init.flight_path_angle_rad, ...
-        'hold_duration_s',hold);
+        'hold_duration_s',hold,'launch_lat',mission.launch_lat, ...
+        'atmosphere_rotates',rotates);
     ufun=guidance_profiles('initial-angle-then-gravity-turn',p);
     meta.profile='initial-angle-then-gravity-turn';
     meta.hold_duration_s=hold;
