@@ -220,6 +220,8 @@ p=propagate_to_knudsen_transition(cfg,mission,traj_params, ...
 verifyTrue(testCase,p.transition.detected);
 verifyEqual(testCase,p.transition.time_s,0,'AbsTol',0);
 verifyEqual(testCase,p.transition.burned_propellant_kg,0,'AbsTol',0);
+verifyEqual(testCase,p.losses.drag_m_s,0,'AbsTol',0);
+verifyEqual(testCase,p.losses.gravity_m_s,0,'AbsTol',0);
 verifyEqual(testCase,p.transition.remaining_propellant_kg, ...
     cfg.stages(1).mp_kg,'RelTol',1e-12);
 end
