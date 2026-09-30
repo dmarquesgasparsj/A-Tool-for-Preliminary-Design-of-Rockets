@@ -207,7 +207,7 @@ function v=get_limit(s,name)
 if isfield(s,name) && ~isempty(s.(name))
     v=s.(name);
     validateattributes(v,{'numeric'}, ...
-        {'scalar','real','finite','nonnegative'});
+        {'scalar','real','nonnegative'});
 else
     v=Inf;
 end
