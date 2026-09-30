@@ -33,7 +33,7 @@ N=numel(cfg.stages);
 template=struct('name','','Isp_s',0,'thrust_N',0, ...
     'mp_kg',0,'ms_kg',0,'fs_struct',0,'CdA_m2',NaN, ...
     'reference_area_m2',NaN,'diameter_m',NaN, ...
-    'drag_model','constant_cda');
+    'drag_model','constant_cda','thrust_misalignment_rad',0);
 stages=repmat(template,1,N);
 
 for i=1:N
@@ -107,6 +107,10 @@ for i=1:N
     stages(i).reference_area_m2=area;
     stages(i).diameter_m=diameter;
     stages(i).drag_model=model;
+    if isfield(source,'thrust_misalignment_rad') && ...
+            isfinite(source.thrust_misalignment_rad)
+        stages(i).thrust_misalignment_rad=source.thrust_misalignment_rad;
+    end
 end
 
 traj_cfg.name='GENERALIZED-COUPLED';
