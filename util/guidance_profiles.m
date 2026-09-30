@@ -13,6 +13,17 @@ switch lower(profile)
         tdur = params.kick_dur;
         ang  = params.kick_ang;
         ufun = @(t, state) local_fun(t, state, tp, tdur, ang);
+    case 'initial-angle-then-gravity-turn'
+        if ~isfield(params,'initial_gamma_rad')
+            error('guidance_profiles:InitialGamma', ...
+                'initial_gamma_rad is required.');
+        end
+        if ~isfield(params,'hold_duration_s'), params.hold_duration_s=0; end
+        gamma0=params.initial_gamma_rad;
+        hold=params.hold_duration_s;
+        ufun=@(t,state) inclined_fun(t,state,gamma0,hold);
+    case 'velocity-aligned'
+        ufun=@(~,state) velocity_aligned(state);
     otherwise
         error('Perfil de guiamento desconhecido.');
 end
@@ -41,5 +52,26 @@ if vnorm < 1e-6
     u = [1; 0];
 else
     u = [vr; vtheta] / vnorm;
+end
+end
+
+
+function u = inclined_fun(t,state,gamma0,hold)
+if t < hold
+    % gamma measured above local horizontal: [radial;tangential]
+    u=[sin(gamma0);cos(gamma0)];
+    u=u/max(norm(u),eps);
+else
+    u=velocity_aligned(state);
+end
+end
+
+function u = velocity_aligned(state)
+vr=state(3); vtheta=state(4);
+vnorm=hypot(vr,vtheta);
+if vnorm<1e-8
+    u=[1;0];
+else
+    u=[vr;vtheta]/vnorm;
 end
 end
