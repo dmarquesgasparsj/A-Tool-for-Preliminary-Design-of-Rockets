@@ -57,6 +57,32 @@ transition=struct('detected',false,'time_s',NaN,'state',NaN(5,1), ...
     'stage_index',NaN,'remaining_propellant_kg',NaN, ...
     'burned_propellant_kg',NaN,'knudsen',NaN,'altitude_m',NaN);
 
+% A generalized air launch may already start at or above the thesis
+% atmospheric/exo-atmospheric boundary. In that case the hand-off is
+% immediate and no propellant is burned before free flight.
+air0=atmosphere_relative_velocity_2d(state(1),state(3),state(4),env);
+atm0=thesis_extended_atmosphere(init.altitude_m,air0.speed_m_s,Lkn);
+if atm0.knudsen>=threshold
+    t_hist=0;
+    x_hist=state.';
+    stage_hist=1;
+    transition.detected=true;
+    transition.time_s=0;
+    transition.state=state;
+    transition.stage_index=1;
+    transition.remaining_propellant_kg=stages(1).mp_kg;
+    transition.burned_propellant_kg=0;
+    transition.knudsen=atm0.knudsen;
+    transition.altitude_m=init.altitude_m;
+    events(1).name=stages(1).name;
+    events(1).t_start=0;
+    events(1).t_end=0;
+    events(1).burnout=false;
+    events(1).mass_start_kg=m0;
+    events(1).mass_end_kg=m0;
+end
+
+if ~transition.detected
 for i=1:N
     st=stages(i);
     mdot=st.thrust_N/(st.Isp_s*env.g0);
@@ -92,9 +118,11 @@ for i=1:N
             x_hist(end,5)=x_transition(5);
         end
 
+        air_transition=atmosphere_relative_velocity_2d( ...
+            x_transition(1),x_transition(3),x_transition(4),env);
         atm=thesis_extended_atmosphere( ...
             max(0,x_transition(1)-env.Re), ...
-            hypot(x_transition(3),x_transition(4)),Lkn);
+            air_transition.speed_m_s,Lkn);
 
         transition.detected=true;
         transition.time_s=t_transition;
@@ -127,6 +155,7 @@ for i=1:N
     state=x_seg(end,:)';
     state(5)=m_after;
     t0=t0+tburn;
+end
 end
 
 if isempty(t_hist)
@@ -196,8 +225,8 @@ end
 
 function [value,isterminal,direction]=kn_event(~,x,Lkn,threshold,env)
 h=max(0,x(1)-env.Re);
-v=hypot(x(3),x(4));
-atm=thesis_extended_atmosphere(h,v,Lkn);
+air=atmosphere_relative_velocity_2d(x(1),x(3),x(4),env);
+atm=thesis_extended_atmosphere(h,air.speed_m_s,Lkn);
 value=atm.knudsen-threshold;
 isterminal=1;
 direction=1;
