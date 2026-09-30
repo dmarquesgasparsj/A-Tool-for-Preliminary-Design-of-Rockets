@@ -2,7 +2,8 @@ function phase = propagate_to_knudsen_transition(cfg,mission,traj_params,payload
 %PROPAGATE_TO_KNUDSEN_TRANSITION Powered atmospheric ascent to Kn = threshold.
 %
 % Integrates the same staged 2D polar equations used by
-% simulate_gravity_turn, but terminates exactly when the reconstructed
+% simulate_gravity_turn, including generalized inclined/air-launch initial
+% conditions, but terminates exactly when the reconstructed
 % Knudsen number reaches cfg.knudsen_transition_threshold (default 5).
 %
 % The returned transition state retains the currently burning stage and its
@@ -31,25 +32,19 @@ for k=1:numel(required_mission)
             'Mission is missing %s.',required_mission{k});
     end
 end
-required_guidance={'t_pitch','pitch_kick','kick_dur'};
-for k=1:numel(required_guidance)
-    if ~isfield(traj_params,required_guidance{k})
-        error('propagate_to_knudsen_transition:Guidance', ...
-            'Trajectory parameters are missing %s.',required_guidance{k});
-    end
-end
-
 env=earth_constants();
+env.launch_lat=mission.launch_lat;
+if isfield(mission,'include_earth_rotation')
+    env.atmosphere_rotates=logical(mission.include_earth_rotation);
+else
+    env.atmosphere_rotates=true;
+end
 stages=cfg.stages;
 N=numel(stages);
 m0=payload_mass+sum([stages.mp_kg])+sum([stages.ms_kg]);
-v0_east=env.omega*env.Re*cos(mission.launch_lat);
-state=[env.Re;0;0;v0_east;m0];
-
-gpar=struct('t_pitch',traj_params.t_pitch, ...
-    'kick_dur',traj_params.kick_dur, ...
-    'kick_ang',traj_params.pitch_kick);
-ufun=guidance_profiles('vertical-then-kick-then-gravity-turn',gpar);
+init=launch_initial_conditions(mission,m0);
+state=init.state;
+[ufun,guidance_meta]=launch_guidance(mission,traj_params,init);
 
 t0=0;
 t_hist=[];
@@ -62,6 +57,32 @@ transition=struct('detected',false,'time_s',NaN,'state',NaN(5,1), ...
     'stage_index',NaN,'remaining_propellant_kg',NaN, ...
     'burned_propellant_kg',NaN,'knudsen',NaN,'altitude_m',NaN);
 
+% A generalized air launch may already start at or above the thesis
+% atmospheric/exo-atmospheric boundary. In that case the hand-off is
+% immediate and no propellant is burned before free flight.
+air0=atmosphere_relative_velocity_2d(state(1),state(3),state(4),env);
+atm0=thesis_extended_atmosphere(init.altitude_m,air0.speed_m_s,Lkn);
+if atm0.knudsen>=threshold
+    t_hist=0;
+    x_hist=state.';
+    stage_hist=1;
+    transition.detected=true;
+    transition.time_s=0;
+    transition.state=state;
+    transition.stage_index=1;
+    transition.remaining_propellant_kg=stages(1).mp_kg;
+    transition.burned_propellant_kg=0;
+    transition.knudsen=atm0.knudsen;
+    transition.altitude_m=init.altitude_m;
+    events(1).name=stages(1).name;
+    events(1).t_start=0;
+    events(1).t_end=0;
+    events(1).burnout=false;
+    events(1).mass_start_kg=m0;
+    events(1).mass_end_kg=m0;
+end
+
+if ~transition.detected
 for i=1:N
     st=stages(i);
     mdot=st.thrust_N/(st.Isp_s*env.g0);
@@ -97,9 +118,11 @@ for i=1:N
             x_hist(end,5)=x_transition(5);
         end
 
+        air_transition=atmosphere_relative_velocity_2d( ...
+            x_transition(1),x_transition(3),x_transition(4),env);
         atm=thesis_extended_atmosphere( ...
             max(0,x_transition(1)-env.Re), ...
-            hypot(x_transition(3),x_transition(4)),Lkn);
+            air_transition.speed_m_s,Lkn);
 
         transition.detected=true;
         transition.time_s=t_transition;
@@ -133,6 +156,7 @@ for i=1:N
     state(5)=m_after;
     t0=t0+tburn;
 end
+end
 
 if isempty(t_hist)
     error('propagate_to_knudsen_transition:EmptyTrajectory', ...
@@ -153,10 +177,13 @@ Mach=zeros(size(t_hist));
 Kn=zeros(size(t_hist));
 drag_rate=zeros(size(t_hist));
 gravity_rate=zeros(size(t_hist));
+air_speed=zeros(size(t_hist));
 for j=1:numel(t_hist)
     st=stages(stage_hist(j));
-    aero=aerodynamic_drag(st,max(0,h(j)),v(j));
-    rare=thesis_extended_atmosphere(max(0,h(j)),v(j),Lkn);
+    air=atmosphere_relative_velocity_2d(r(j),vr(j),vtheta(j),env);
+    air_speed(j)=air.speed_m_s;
+    aero=aerodynamic_drag(st,max(0,h(j)),air.speed_m_s);
+    rare=thesis_extended_atmosphere(max(0,h(j)),air.speed_m_s,Lkn);
     rho(j)=aero.rho_kg_m3;
     q(j)=aero.dynamic_pressure_Pa;
     Cd(j)=aero.Cd;
@@ -176,14 +203,22 @@ phase.v=v;
 phase.gamma=gamma;
 phase.m=x_hist(:,5);
 phase.stage_index=stage_hist;
+phase.air_speed_m_s=air_speed;
 phase.rho=rho;
 phase.dynamic_pressure_Pa=q;
 phase.Cd=Cd;
 phase.mach=Mach;
 phase.knudsen=Kn;
 phase.max_dynamic_pressure_Pa=max(q);
-phase.losses.drag_m_s=trapz(t_hist,drag_rate);
-phase.losses.gravity_m_s=trapz(t_hist,gravity_rate);
+if numel(t_hist)<2
+    % Immediate Kn hand-off at launch: no elapsed atmospheric time means
+    % zero integrated drag/gravity loss by definition.
+    phase.losses.drag_m_s=0;
+    phase.losses.gravity_m_s=0;
+else
+    phase.losses.drag_m_s=trapz(t_hist,drag_rate);
+    phase.losses.gravity_m_s=trapz(t_hist,gravity_rate);
+end
 phase.losses.total_m_s=phase.losses.drag_m_s+phase.losses.gravity_m_s;
 phase.transition=transition;
 phase.stage_events=events;
@@ -191,12 +226,14 @@ phase.cfg=cfg;
 phase.traj_params=traj_params;
 phase.payload_kg=payload_mass;
 phase.m0=m0;
+phase.initial_conditions=init;
+phase.guidance=guidance_meta;
 end
 
 function [value,isterminal,direction]=kn_event(~,x,Lkn,threshold,env)
 h=max(0,x(1)-env.Re);
-v=hypot(x(3),x(4));
-atm=thesis_extended_atmosphere(h,v,Lkn);
+air=atmosphere_relative_velocity_2d(x(1),x(3),x(4),env);
+atm=thesis_extended_atmosphere(h,air.speed_m_s,Lkn);
 value=atm.knudsen-threshold;
 isterminal=1;
 direction=1;

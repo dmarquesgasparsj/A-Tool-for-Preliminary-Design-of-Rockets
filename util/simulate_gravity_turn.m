@@ -1,7 +1,8 @@
 function traj = simulate_gravity_turn(cfg, mission, traj_params, payload_mass)
 %SIMULATE_GRAVITY_TURN Integrate a simplified 2D staged ascent.
-%   The vehicle flies vertically, performs a short pitch kick and then
-%   follows a gravity turn with thrust aligned to the velocity vector.
+%   Historical/default missions fly vertically, perform a short pitch kick
+%   and then follow a gravity turn. Modern missions may start at arbitrary
+%   altitude, speed and flight-path angle for inclined or air launch.
 %
 %   This function deliberately contains only the trajectory propagation.
 %   Vehicle sizing belongs to the mass/design model, so pre-computed ms_kg
@@ -18,26 +19,22 @@ for k = 1:numel(required_mission)
     end
 end
 
-required_guidance = {'t_pitch','pitch_kick','kick_dur'};
-for k = 1:numel(required_guidance)
-    if ~isfield(traj_params, required_guidance{k})
-        error('Trajectory parameters are missing "%s".', required_guidance{k});
-    end
-end
-
 env = earth_constants();
 Re = env.Re;
-omega = env.omega;
-
-% Initial eastward velocity from Earth's rotation.
-v0_east = omega * Re * cos(mission.launch_lat);
+env.launch_lat = mission.launch_lat;
+if isfield(mission,'include_earth_rotation')
+    env.atmosphere_rotates = logical(mission.include_earth_rotation);
+else
+    env.atmosphere_rotates = true;
+end
 
 stages = cfg.stages;
 N = numel(stages);
 m0 = payload_mass + sum([stages.mp_kg]) + sum([stages.ms_kg]);
 
 % State = [radius; longitude-like angle; radial velocity; tangential velocity; mass]
-state = [Re; 0; 0; v0_east; m0];
+init = launch_initial_conditions(mission,m0);
+state = init.state;
 t0 = 0;
 t_hist = [];
 x_hist = [];
@@ -45,11 +42,9 @@ stage_index_hist = [];
 stage_events = repmat(struct('name','','t_start',0,'t_burnout',0, ...
     'mass_start_kg',0,'mass_burnout_kg',0,'mass_after_sep_kg',0), 1, N);
 
-% Guidance profile.
-gpar.t_pitch = traj_params.t_pitch;
-gpar.kick_dur = traj_params.kick_dur;
-gpar.kick_ang = traj_params.pitch_kick;
-ufun = guidance_profiles('vertical-then-kick-then-gravity-turn', gpar);
+% Guidance profile. Historical ground launches retain the original
+% vertical/kick law; inclined and air launches use their initial FPA.
+[ufun,guidance_meta] = launch_guidance(mission,traj_params,init);
 
 ode_opts = odeset('RelTol',1e-7,'AbsTol',1e-8);
 
@@ -138,9 +133,12 @@ end
 kn_hist=NaN(size(t_hist));
 mean_free_path_hist=NaN(size(t_hist));
 
+air_speed_hist=zeros(size(t_hist));
 for j=1:numel(t_hist)
     st=stages(stage_index_hist(j));
-    aero=aerodynamic_drag(st,max(0,h(j)),v(j));
+    air=atmosphere_relative_velocity_2d(r(j),vr(j),vtheta(j),env);
+    air_speed_hist(j)=air.speed_m_s;
+    aero=aerodynamic_drag(st,max(0,h(j)),air.speed_m_s);
     rho_hist(j)=aero.rho_kg_m3;
     q_hist(j)=aero.dynamic_pressure_Pa;
     cd_hist(j)=aero.Cd;
@@ -149,7 +147,7 @@ for j=1:numel(t_hist)
     drag_rate(j)=aero.drag_N/max(x_hist(j,5),eps);
 
     if isfinite(kn_length)
-        rare=thesis_extended_atmosphere(max(0,h(j)),v(j),kn_length);
+        rare=thesis_extended_atmosphere(max(0,h(j)),air.speed_m_s,kn_length);
         kn_hist(j)=rare.knudsen;
         mean_free_path_hist(j)=rare.mean_free_path_m;
     end
@@ -162,6 +160,7 @@ end
 drag_cumulative=cumtrapz(t_hist,drag_rate);
 gravity_cumulative=cumtrapz(t_hist,gravity_rate);
 
+traj.air_speed_m_s = air_speed_hist;
 traj.rho = rho_hist;
 traj.dynamic_pressure_Pa = q_hist;
 traj.max_dynamic_pressure_Pa = max(q_hist);
@@ -200,4 +199,6 @@ traj.loss_history.gravity_m_s = gravity_cumulative;
 traj.loss_history.total_m_s = drag_cumulative + gravity_cumulative;
 
 traj.traj_params = traj_params;
+traj.initial_conditions = init;
+traj.guidance = guidance_meta;
 end
