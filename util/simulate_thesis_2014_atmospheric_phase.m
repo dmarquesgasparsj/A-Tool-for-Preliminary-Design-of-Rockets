@@ -252,21 +252,25 @@ phase.model_status=[ ...
     'Eqs. 3.1-3.4, Eq. 3.49, Eq. 3.55 and Kn=5.'];
 phase.provenance_note=[ ...
     'Recovered RocketDynEq was not available; vertical-to-GT switching ', ...
-    'drag-area interpretation and coast aerodynamics are explicit reconstruction choices.'];
+    'drag-area interpretation and coast aerodynamics are explicit reconstruction choices. Pressure-aware nozzle thrust is used only when explicitly configured.'];
 
     function dy=vertical_eom(~,y,st,mdot)
         v=max(y(1),0); h=max(y(3),0); m=max(y(4),eps);
         D=drag_force(stage_index,h,v);
         g=local_g(h);
-        dy=[(st.thrust_N-D)/m-g; 0; v; -mdot];
+        atm_local=thesis_extended_atmosphere(h,v);
+        Tlocal=stage_thrust_at_ambient(st,atm_local.pressure_Pa);
+        dy=[(Tlocal-D)/m-g; 0; v; -mdot];
     end
 
     function dy=gravity_turn_eom(~,y,st,mdot)
         v=max(y(1),1e-6); gamma=y(2); h=max(y(4),0); m=max(y(5),eps);
         D=drag_force(stage_index,h,v);
         g=local_g(h);
+        atm_local=thesis_extended_atmosphere(h,v);
+        Tlocal=stage_thrust_at_ambient(st,atm_local.pressure_Pa);
         curvature=v^2/(Re+h);
-        dv=(st.thrust_N-D)/m-(g-curvature)*sin(gamma);
+        dv=(Tlocal-D)/m-(g-curvature)*sin(gamma);
         dgamma=-(g-curvature)*cos(gamma)/v;
         dx=v*cos(gamma);
         dh=v*sin(gamma);
