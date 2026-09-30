@@ -157,3 +157,35 @@ verifyEqual(testCase,cfg.stages(1).skin_model.skin_thickness_m,0.004);
 verifyTrue(testCase,cfg.stages(1).pressure_nozzle.enabled);
 verifyEqual(testCase,cfg.stages(1).pressure_nozzle.chamber_pressure_Pa,5e6);
 end
+
+
+function testConstraintEvaluatorUsesZeroThrustDuringCoast(testCase)
+traj.t=[0 1 2];
+traj.v=[100 100 100];
+traj.h=[1000 1000 1000];
+traj.m=[1000 1000 1000];
+traj.stage_index=[1 1 1];
+traj.powered=[true false true];
+traj.rho=[1 1 1];
+traj.dynamic_pressure_Pa=0.5*traj.rho.*traj.v.^2;
+traj.Cd=[0.2 0.2 0.2];
+
+vehicle.stages=struct('diameter_m',2,'thrust_N',100e3);
+c=evaluate_trajectory_constraints(traj,vehicle,struct(), ...
+    struct('nose_radius_m',0.5));
+
+verifyGreaterThan(testCase,c.thrust_N(1),0);
+verifyEqual(testCase,c.thrust_N(2),0,'AbsTol',0);
+verifyGreaterThan(testCase,c.thrust_N(3),0);
+verifyFalse(testCase,c.powered(2));
+verifyLessThan(testCase,c.axial_accel_g(2),0);
+end
+
+function testHistoricalCoastSamplesAreMarkedUnpowered(testCase)
+cfg=vega_2014_trajectory_config();
+p=simulate_thesis_2014_atmospheric_phase(cfg);
+verifyEqual(testCase,numel(p.powered),numel(p.t));
+if any(~p.powered)
+    verifyTrue(testCase,all(p.stage_index(~p.powered)>=2));
+end
+end
