@@ -62,6 +62,11 @@ The repository combines research from the 2014 thesis, recovered **unfinished de
 - optional Chapter-5 stage geometry / exterior skin-mass model;
 - pressure-aware chamber/nozzle model with ambient-pressure thrust;
 - trajectory-constraint evaluation for max-q, heat flux, bending and axial acceleration;
+- inclined / air-launch initial conditions with backward-compatible ground-launch defaults;
+- GEO Hohmann transfer and interplanetary Hohmann / patched-conic mission analysis;
+- long-coast 3D orbital propagation with optional Earth J2;
+- deterministic thrust-misalignment model for 2D/3D directions;
+- transparent parametric cost-estimating framework with learning curve;
 - Ariane 5 original/optimum benchmark fixtures;
 - stage mass accounting and separation events;
 - launcher configuration validation;
@@ -80,7 +85,7 @@ The repository combines research from the 2014 thesis, recovered **unfinished de
 - full thesis-quality `Delta-V` coupling across both serial and parallel staging;
 - complete Vega, Proton K and Ariane 5 end-to-end agreement.
 
-See [`docs/THESIS_MODEL.md`](docs/THESIS_MODEL.md) for the 2014 architecture and [`docs/RECONSTRUCTION.md`](docs/RECONSTRUCTION.md) for the distinction between recovered thesis functionality and later maintenance. The implemented 2026 Future Work extensions and their provenance are documented in [`docs/FUTURE_WORK_EXTENSIONS.md`](docs/FUTURE_WORK_EXTENSIONS.md). The development sequence and the original thesis Future Work are tracked in [`ROADMAP.md`](ROADMAP.md), including which 2026 extensions are AI-assisted.
+See [`docs/THESIS_MODEL.md`](docs/THESIS_MODEL.md) for the 2014 architecture and [`docs/RECONSTRUCTION.md`](docs/RECONSTRUCTION.md) for the distinction between recovered thesis functionality and later maintenance. The implemented 2026 Future Work extensions and their provenance are documented in [`docs/FUTURE_WORK_EXTENSIONS.md`](docs/FUTURE_WORK_EXTENSIONS.md), with mission/economic/J2 additions in [`docs/MISSION_EXTENSIONS.md`](docs/MISSION_EXTENSIONS.md). The development sequence and the original thesis Future Work are tracked in [`ROADMAP.md`](ROADMAP.md), including which 2026 extensions are AI-assisted.
 
 ## Running the current code
 
@@ -90,14 +95,14 @@ For the **new integrated and generalized model**, open MATLAB in the repository 
 main
 ```
 
-Choose *Integrated mass + trajectory design (experimental)* for the serial mass/trajectory feedback loop, *Generalized serial-stage mass sizing* for mass-only serial design, or *Parallel booster sizing / Ariane 5 benchmark* for the generalized "zeroth-stage" booster model. The booster menu includes the Ariane reference case, the reported 2014 optimum, and a custom N-booster builder. You can also bypass all menus entirely:
+Choose *Integrated mass + trajectory design (experimental)* for the serial mass/trajectory feedback loop, *Generalized serial-stage mass sizing* for mass-only serial design, *Parallel booster sizing / Ariane 5 benchmark* for the generalized "zeroth-stage" booster model, or *Mission / advanced extensions* for air-launch, GEO/interplanetary, J2 coast and cost studies. The booster menu includes the Ariane reference case, the reported 2014 optimum, and a custom N-booster builder. You can also bypass all menus entirely:
 
 ```matlab
 cfg = general_launcher_preset('illustrative_two_stage');
 result = run_integrated_design(cfg);
 ```
 
-For custom serial missions, use `make_launcher_config(mission, stages)` with either `run_integrated_design(mission, stages)` or `run_thesis_sizing(mission, stages)`. For parallel boosters, build the documented booster configuration struct and call `run_parallel_booster_sizing(cfg)`; `ariane5_2014_parallel_config('reported_optimum')` is an example. The booster path is currently mass/performance sizing only: full booster trajectory coupling remains a validation milestone.
+For custom serial missions, use `make_launcher_config(mission, stages)` with either `run_integrated_design(mission, stages)` or `run_thesis_sizing(mission, stages)`. For parallel boosters, build the documented booster configuration struct and call `run_parallel_booster_sizing(cfg)`; `ariane5_2014_parallel_config('reported_optimum')` is an example. Booster trajectory coupling is implemented experimentally, while historical Ariane end-to-end closure remains a validation milestone.
 
 The earlier simplified trajectory demonstration remains accessible from the second `main` menu option or programmatically:
 
