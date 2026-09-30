@@ -76,7 +76,7 @@ The three-phase architecture, documented interstage coasts, final-stage residual
 Pressure-aware nozzle geometry/thrust and max-q, heat-flux, bending and axial-acceleration evaluators are implemented. Remaining work is validation, shape-specific drag beyond the thesis-wide Cd(Mach), and active guidance/throttle constraint handling.
 
 ### v0.6 — Configuration generalization
-The generic "zeroth-stage" parallel-booster mass/performance model and a toolbox-free discrete optimizer are implemented. Remaining work: couple boosters into the full trajectory loop, add grain-geometry submodels, inclined/air launch and broader mission initial conditions.
+The generic "zeroth-stage" parallel-booster mass/performance model, trajectory coupling and a toolbox-free discrete optimizer are implemented. Inclined/air-launch initial conditions are also implemented. Remaining work: grain-geometry submodels, full 3D launch heading/azimuth and broader validation.
 
 ### v0.7 — Mission and economic extensions
 Inclined/air-launch initial conditions, transparent CER cost modelling, GEO Hohmann transfer, interplanetary Hohmann/patched-conic analysis and long-coast 3D propagation are implemented. Remaining work: ephemeris/Lambert targeting, arrival/capture manoeuvres and calibrated monetary CER datasets.
