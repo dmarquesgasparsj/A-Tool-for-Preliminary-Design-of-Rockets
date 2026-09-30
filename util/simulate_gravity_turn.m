@@ -1,7 +1,8 @@
 function traj = simulate_gravity_turn(cfg, mission, traj_params, payload_mass)
 %SIMULATE_GRAVITY_TURN Integrate a simplified 2D staged ascent.
-%   The vehicle flies vertically, performs a short pitch kick and then
-%   follows a gravity turn with thrust aligned to the velocity vector.
+%   Historical/default missions fly vertically, perform a short pitch kick
+%   and then follow a gravity turn. Modern missions may start at arbitrary
+%   altitude, speed and flight-path angle for inclined or air launch.
 %
 %   This function deliberately contains only the trajectory propagation.
 %   Vehicle sizing belongs to the mass/design model, so pre-computed ms_kg
@@ -18,26 +19,16 @@ for k = 1:numel(required_mission)
     end
 end
 
-required_guidance = {'t_pitch','pitch_kick','kick_dur'};
-for k = 1:numel(required_guidance)
-    if ~isfield(traj_params, required_guidance{k})
-        error('Trajectory parameters are missing "%s".', required_guidance{k});
-    end
-end
-
 env = earth_constants();
 Re = env.Re;
-omega = env.omega;
-
-% Initial eastward velocity from Earth's rotation.
-v0_east = omega * Re * cos(mission.launch_lat);
 
 stages = cfg.stages;
 N = numel(stages);
 m0 = payload_mass + sum([stages.mp_kg]) + sum([stages.ms_kg]);
 
 % State = [radius; longitude-like angle; radial velocity; tangential velocity; mass]
-state = [Re; 0; 0; v0_east; m0];
+init = launch_initial_conditions(mission,m0);
+state = init.state;
 t0 = 0;
 t_hist = [];
 x_hist = [];
@@ -45,11 +36,9 @@ stage_index_hist = [];
 stage_events = repmat(struct('name','','t_start',0,'t_burnout',0, ...
     'mass_start_kg',0,'mass_burnout_kg',0,'mass_after_sep_kg',0), 1, N);
 
-% Guidance profile.
-gpar.t_pitch = traj_params.t_pitch;
-gpar.kick_dur = traj_params.kick_dur;
-gpar.kick_ang = traj_params.pitch_kick;
-ufun = guidance_profiles('vertical-then-kick-then-gravity-turn', gpar);
+% Guidance profile. Historical ground launches retain the original
+% vertical/kick law; inclined and air launches use their initial FPA.
+[ufun,guidance_meta] = launch_guidance(mission,traj_params,init);
 
 ode_opts = odeset('RelTol',1e-7,'AbsTol',1e-8);
 
@@ -200,4 +189,6 @@ traj.loss_history.gravity_m_s = gravity_cumulative;
 traj.loss_history.total_m_s = drag_cumulative + gravity_cumulative;
 
 traj.traj_params = traj_params;
+traj.initial_conditions = init;
+traj.guidance = guidance_meta;
 end
