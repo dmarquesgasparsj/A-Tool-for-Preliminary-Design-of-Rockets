@@ -173,3 +173,53 @@ verifyEqual(testCase,cfg.stages.thrust_misalignment_rad,0.01);
 verifyEqual(testCase,cfg.stages.cost_complexity_factor,1.3);
 verifyEqual(testCase,cfg.stages.quantity,2);
 end
+
+
+function testAtmosphereRelativeSpeedRemovesEarthRotation(testCase)
+env=earth_constants();
+env.launch_lat=0;
+env.atmosphere_rotates=true;
+r=env.Re+12000;
+vrotation=env.omega*r;
+air=atmosphere_relative_velocity_2d(r,0,vrotation+250,env);
+verifyEqual(testCase,air.speed_m_s,250,'RelTol',1e-12);
+verifyEqual(testCase,air.atmosphere_tangential_speed_m_s,vrotation, ...
+    'RelTol',1e-12);
+end
+
+function testInclinedGroundLaunchGetsAutomaticSteeringHold(testCase)
+m=struct('launch_lat',0,'initial_flight_path_angle_deg',30, ...
+    'include_earth_rotation',true);
+init=launch_initial_conditions(m,1000);
+[u,meta]=launch_guidance(m,struct(),init);
+verifyEqual(testCase,meta.hold_duration_s,1,'AbsTol',1e-12);
+verifyEqual(testCase,u(0,init.state), ...
+    [sin(deg2rad(30));cos(deg2rad(30))],'AbsTol',1e-12);
+end
+
+function testInterplanetaryTargetSpeedOverride(testCase)
+base=interplanetary_transfer_analysis(1.523679,200e3);
+custom=interplanetary_transfer_analysis(1.523679,200e3, ...
+    struct('target_body_circular_speed_m_s', ...
+    base.target_circular_speed_m_s+1000));
+verifyEqual(testCase,custom.target_circular_speed_m_s, ...
+    base.target_circular_speed_m_s+1000,'AbsTol',1e-12);
+verifyNotEqual(testCase,custom.arrival_v_inf_m_s,base.arrival_v_inf_m_s);
+end
+
+function testKnudsenTransitionCanOccurAtLaunch(testCase)
+base=general_launcher_preset('illustrative_two_stage');
+mass=thesis_iterative_mass_model(base);
+cfg=trajectory_config_from_mass_result(base,mass);
+mission=struct('target_alt',300e3,'launch_lat',0, ...
+    'initial_altitude_m',200e3,'initial_speed_m_s',1000, ...
+    'initial_flight_path_angle_deg',0);
+traj_params=struct('initial_angle_hold_s',0);
+p=propagate_to_knudsen_transition(cfg,mission,traj_params, ...
+    base.mission.payload_kg);
+verifyTrue(testCase,p.transition.detected);
+verifyEqual(testCase,p.transition.time_s,0,'AbsTol',0);
+verifyEqual(testCase,p.transition.burned_propellant_kg,0,'AbsTol',0);
+verifyEqual(testCase,p.transition.remaining_propellant_kg, ...
+    cfg.stages(1).mp_kg,'RelTol',1e-12);
+end
