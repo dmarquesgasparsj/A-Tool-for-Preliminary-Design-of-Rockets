@@ -33,6 +33,12 @@ for k=1:numel(required_mission)
     end
 end
 env=earth_constants();
+env.launch_lat=mission.launch_lat;
+if isfield(mission,'include_earth_rotation')
+    env.atmosphere_rotates=logical(mission.include_earth_rotation);
+else
+    env.atmosphere_rotates=true;
+end
 stages=cfg.stages;
 N=numel(stages);
 m0=payload_mass+sum([stages.mp_kg])+sum([stages.ms_kg]);
@@ -142,10 +148,13 @@ Mach=zeros(size(t_hist));
 Kn=zeros(size(t_hist));
 drag_rate=zeros(size(t_hist));
 gravity_rate=zeros(size(t_hist));
+air_speed=zeros(size(t_hist));
 for j=1:numel(t_hist)
     st=stages(stage_hist(j));
-    aero=aerodynamic_drag(st,max(0,h(j)),v(j));
-    rare=thesis_extended_atmosphere(max(0,h(j)),v(j),Lkn);
+    air=atmosphere_relative_velocity_2d(r(j),vr(j),vtheta(j),env);
+    air_speed(j)=air.speed_m_s;
+    aero=aerodynamic_drag(st,max(0,h(j)),air.speed_m_s);
+    rare=thesis_extended_atmosphere(max(0,h(j)),air.speed_m_s,Lkn);
     rho(j)=aero.rho_kg_m3;
     q(j)=aero.dynamic_pressure_Pa;
     Cd(j)=aero.Cd;
@@ -165,6 +174,7 @@ phase.v=v;
 phase.gamma=gamma;
 phase.m=x_hist(:,5);
 phase.stage_index=stage_hist;
+phase.air_speed_m_s=air_speed;
 phase.rho=rho;
 phase.dynamic_pressure_Pa=q;
 phase.Cd=Cd;
