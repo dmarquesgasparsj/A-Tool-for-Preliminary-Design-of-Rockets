@@ -23,6 +23,12 @@ if init.is_historical_ground_default
 else
     if isfield(traj_params,'initial_angle_hold_s')
         hold=traj_params.initial_angle_hold_s;
+    elseif init.relative_speed_m_s < 10
+        % A zero/very-low-speed inclined launch needs a finite initial
+        % steering hold; otherwise velocity-aligned guidance would follow
+        % Earth rotation (horizontal) or the zero-speed fallback instead
+        % of the requested flight-path angle.
+        hold=1;
     else
         hold=0;
     end
