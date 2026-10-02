@@ -36,7 +36,8 @@ template=struct('name','','Isp_s',0,'thrust_N',0, ...
     'reference_area_m2',NaN,'diameter_m',NaN, ...
     'drag_model','constant_cda','thrust_misalignment_rad',0, ...
     'nose_cone',struct(),'pressure_nozzle',struct(), ...
-    'constraint_limits',struct(),'constraint_control',struct(),'throttle',1);
+    'constraint_limits',struct(),'constraint_control',struct(),'throttle',1, ...
+    'design_epsilon',NaN);
 stages=repmat(template,1,N);
 
 for i=1:N
@@ -147,7 +148,13 @@ for i=1:N
     % Reserve propellant remains aboard at burnout and is therefore carried
     % with the jettisoned/non-burned mass in the trajectory representation.
     stages(i).ms_kg=sized.ms_kg+reserve;
-    stages(i).fs_struct=sized.epsilon;
+    stages(i).design_epsilon=sized.epsilon;
+    denom=stages(i).ms_kg+stages(i).mp_kg;
+    if denom>0
+        stages(i).fs_struct=stages(i).ms_kg/denom;
+    else
+        stages(i).fs_struct=0;
+    end
     stages(i).CdA_m2=cdA;
     stages(i).reference_area_m2=area;
     stages(i).diameter_m=diameter;
