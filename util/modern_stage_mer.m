@@ -16,7 +16,8 @@ function components = modern_stage_mer(stage, ms_kg, mp_kg)
 % is true. Pressure-aware nozzle shell mass is also opt-in because the
 % liquid/hybrid engine MER already contains an area-ratio term and adding
 % a shell mass by default could double-count nozzle hardware.
-% Interstages and dry-mass margin remain separate future components.
+% Optional fairing/interstage/adapter/wiring geometry and dry-mass margin are
+% explicit modern components; the thesis had no interstage MER.
 %
 % The thesis coefficients use the H2-tank formula as a fallback for fuels
 % other than RP1, and the LOX-tank formula for other oxidizers. Those
@@ -46,7 +47,8 @@ components = struct('fuel_tank_kg',0,'oxidizer_tank_kg',0, ...
     'avionics_kg',mer.avionics_kg,'engine_kg',0,'engine_mass_detail',struct(), ...
     'nozzle_kg',0, ...
     'insulation_kg',0,'fairing_kg',0,'skin_kg',0, ...
-    'pressure_nozzle_shell_kg',0,'total_kg',0);
+    'pressure_nozzle_shell_kg',0,'secondary_structure_kg',0, ...
+    'dry_mass_margin_kg',0,'total_kg',0);
 
 switch lower(stage.propulsion_type)
     case 'solid'
@@ -112,6 +114,30 @@ if isfield(stage,'include_skin_mass') && logical(stage.include_skin_mass)
     components.geometry=gskin;
 end
 
+% Optional fairing/interstage/payload-adapter/wiring geometry. The fairing
+% may use thesis Eq. 4.16; other components require explicit user calibration.
+secondary_fields={'fairing_model','interstage_model', ...
+    'payload_adapter_model','wiring_model'};
+has_secondary=false;
+for jj=1:numel(secondary_fields)
+    key=secondary_fields{jj};
+    if isfield(stage,key) && isstruct(stage.(key)) && ...
+            ~isempty(fieldnames(stage.(key)))
+        has_secondary=true;
+        break;
+    end
+end
+if has_secondary
+    sec=estimate_secondary_structure(stage);
+    components.secondary_structure_kg=sec.total_kg;
+    components.secondary_structure=sec;
+    % Avoid double-counting fairing when a new fairing model is active and
+    % legacy fairing_area_m2 was also supplied.
+    if sec.fairing_kg>0 && components.fairing_kg>0
+        components.fairing_kg=0;
+    end
+end
+
 % Future Work extension: pressure-aware nozzle geometry/mass. For liquid
 % and hybrid stages this shell is NOT added unless the caller explicitly
 % requests add_pressure_nozzle_shell_mass=true, avoiding hidden double count.
@@ -134,6 +160,26 @@ if isfield(stage,'pressure_nozzle') && isstruct(stage.pressure_nozzle) && ...
             components.pressure_nozzle_shell_kg=nozzle_perf.nozzle_shell_mass_kg;
         end
     end
+end
+
+% Optional dry-mass contingency applied to all modeled dry components before
+% the margin itself. This is explicit rather than a hidden blanket factor.
+base_total=0;
+base_fields=fieldnames(components);
+for jj=1:numel(base_fields)
+    key=base_fields{jj};
+    if ~any(strcmp(key,{'total_kg','dry_mass_margin_kg'})) && ...
+            isnumeric(components.(key)) && isscalar(components.(key))
+        base_total=base_total+components.(key);
+    end
+end
+if isfield(stage,'dry_mass_margin_fraction') && ...
+        isfinite(stage.dry_mass_margin_fraction) && ...
+        stage.dry_mass_margin_fraction>0
+    validateattributes(stage.dry_mass_margin_fraction,{'numeric'}, ...
+        {'scalar','real','finite','>=',0,'<',1});
+    components.dry_mass_margin_kg= ...
+        stage.dry_mass_margin_fraction*base_total;
 end
 
 fields = fieldnames(components);
