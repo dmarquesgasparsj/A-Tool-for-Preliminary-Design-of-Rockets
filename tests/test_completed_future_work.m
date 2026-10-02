@@ -231,3 +231,28 @@ verifyGreaterThan(testCase,m.dry_mass_margin_kg,0);
 base=m.total_kg-m.dry_mass_margin_kg;
 verifyEqual(testCase,m.dry_mass_margin_kg,0.10*base,'RelTol',1e-12);
 end
+
+
+function testTrajectoryAdapterHonorsExplicitConstantDrag(testCase)
+mission=struct('payload_kg',100,'delta_v_budget_m_s',1500);
+s=struct('name','S','propellant_name','HTPB/AP', ...
+    'delta_v_fraction',1,'thrust_N',200e3,'nozzle_area_ratio',12, ...
+    'diameter_m',2,'drag_model','constant_cda','CdA_m2',0.75);
+cfg=make_launcher_config(mission,s);
+mass=thesis_iterative_mass_model(cfg);
+tcfg=trajectory_config_from_mass_result(cfg,mass);
+verifyEqual(testCase,tcfg.stages.drag_model,'constant_cda');
+verifyEqual(testCase,tcfg.stages.CdA_m2,0.75,'AbsTol',1e-12);
+end
+
+function testTrajectoryAdapterHonorsReferenceAreaWithoutDiameter(testCase)
+mission=struct('payload_kg',100,'delta_v_budget_m_s',1500);
+s=struct('name','S','propellant_name','HTPB/AP', ...
+    'delta_v_fraction',1,'thrust_N',200e3,'nozzle_area_ratio',12, ...
+    'reference_area_m2',2.5,'drag_model','thesis_mach_polynomial');
+cfg=make_launcher_config(mission,s);
+mass=thesis_iterative_mass_model(cfg);
+tcfg=trajectory_config_from_mass_result(cfg,mass);
+verifyEqual(testCase,tcfg.stages.reference_area_m2,2.5,'AbsTol',1e-12);
+verifyEqual(testCase,tcfg.stages.drag_model,'thesis_mach_polynomial');
+end
