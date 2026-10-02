@@ -63,7 +63,10 @@ empty = struct('name','','propellant_name','', ...
     'quantity',1,'drag_model','','reference_area_m2',NaN, ...
     'nose_cone',struct(),'engine_mass_model',struct(), ...
     'solid_grain',struct(),'constraint_limits',struct(), ...
-    'constraint_control',struct(),'throttle',1);
+    'constraint_control',struct(),'throttle',1, ...
+    'fairing_model',struct(),'interstage_model',struct(), ...
+    'payload_adapter_model',struct(),'wiring_model',struct(), ...
+    'dry_mass_margin_fraction',0,'propellant_reserve_fraction',0);
 stages = repmat(empty,1,N);
 
 for i = 1:N
@@ -176,7 +179,8 @@ for i = 1:N
         stages(i).drag_model=char(s.drag_model);
     end
     structured={'nose_cone','engine_mass_model','solid_grain', ...
-        'constraint_limits','constraint_control'};
+        'constraint_limits','constraint_control','fairing_model', ...
+        'interstage_model','payload_adapter_model','wiring_model'};
     for jj=1:numel(structured)
         key=structured{jj};
         if isfield(s,key) && ~isempty(s.(key))
@@ -196,6 +200,16 @@ for i = 1:N
                 'stage.throttle must be a [0,1] scalar or function handle.');
         end
         stages(i).throttle=s.throttle;
+    end
+
+    fractions_optional={'dry_mass_margin_fraction','propellant_reserve_fraction'};
+    for jj=1:numel(fractions_optional)
+        key=fractions_optional{jj};
+        if isfield(s,key) && ~isempty(s.(key))
+            validateattributes(s.(key),{'numeric'}, ...
+                {'scalar','real','finite','>=',0,'<',1});
+            stages(i).(key)=s.(key);
+        end
     end
 
     if isfield(s,'propellant_bulk_density_kg_m3') && ...
