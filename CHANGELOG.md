@@ -62,4 +62,4 @@ Historical thesis results included:
 
 The repository now contains implementations for the structural-factor / MER mass model, propellant and geometry data, serial and parallel staging, thesis `Cd(Mach)`, Knudsen transition, staged TPBVP free flight, coupled `Delta-V` feedback, Future-Work propulsion/aerodynamic/constraint extensions, air/inclined launch, cost studies and preliminary GEO/interplanetary analysis.
 
-The remaining open work is primarily **validation and provenance closure**: reproducing Vega, Proton K and Ariane 5 end-to-end results where surviving 2014 evidence permits it, quantifying uncertainty, and calibrating modern empirical extensions against external datasets.
+Historical validation/provenance closure is now implemented in `run_validation_closure.m`: Chapter 6 tables are machine-checkable and Vega/Proton/Ariane trajectory disagreements are explicitly classified without parameter tuning. Remaining work concerns new historical evidence if recovered, plus calibration of modern empirical extensions against independent external datasets.
