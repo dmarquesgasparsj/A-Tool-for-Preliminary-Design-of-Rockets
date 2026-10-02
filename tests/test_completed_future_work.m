@@ -83,8 +83,8 @@ verifyLessThan(testCase,b.propellant_remaining_kg(end), ...
 
 base.geometry='inhibited_core';
 c=solid_grain_ballistics(base,prop,struct('samples',101));
-verifyNotEqual(testCase,b.burning_area_m2(end), ...
-    c.burning_area_m2(end),'RelTol',1e-3);
+verifyGreaterThan(testCase,abs(b.burning_area_m2(end)- ...
+    c.burning_area_m2(end)),1e-3);
 end
 
 function testThirdBodyDifferentialAcceleration(testCase)
