@@ -171,3 +171,63 @@ verifyEqual(testCase,traj.stage_events(1).mass_burnout_kg, ...
 verifyLessThanOrEqual(testCase,min(traj.throttle),1);
 verifyGreaterThanOrEqual(testCase,min(traj.throttle),0.4-1e-12);
 end
+
+
+function testReserveSizingRecoversRequestedDeltaV(testCase)
+payload=500; dv=2500; Isp=320; eps0=0.09; reserve=0.03;
+[ms,mp,~,d]=stage_mass_with_reserve(payload,dv,Isp,eps0,reserve);
+m0=payload+ms+mp;
+mf=payload+ms+d.reserve_propellant_kg;
+recovered=9.80665*Isp*log(m0/mf);
+verifyEqual(testCase,recovered,dv,'RelTol',1e-12);
+verifyEqual(testCase,d.reserve_propellant_kg,reserve*mp,'RelTol',1e-12);
+end
+
+function testGeneralMassModelCarriesStageReserve(testCase)
+mission=struct('payload_kg',200,'delta_v_budget_m_s',2500);
+s=struct('name','Reserve stage','propellant_name','HTPB/AP', ...
+    'delta_v_fraction',1,'thrust_N',300e3,'nozzle_area_ratio',12, ...
+    'diameter_m',1.5,'propellant_reserve_fraction',0.02);
+cfg=make_launcher_config(mission,s);
+r=thesis_iterative_mass_model(cfg);
+verifyGreaterThan(testCase,r.stages.reserve_propellant_kg,0);
+verifyLessThan(testCase,r.stages.usable_propellant_kg,r.stages.mp_kg);
+tcfg=trajectory_config_from_mass_result(cfg,r);
+verifyEqual(testCase,tcfg.stages.mp_kg,r.stages.usable_propellant_kg, ...
+    'RelTol',1e-12);
+verifyEqual(testCase,tcfg.stages.ms_kg, ...
+    r.stages.ms_kg+r.stages.reserve_propellant_kg,'RelTol',1e-12);
+end
+
+function testSecondaryStructureGeometryAndMargin(testCase)
+s=struct();
+s.fairing_model=struct('enabled',true,'shape','ellipse', ...
+    'length_m',3,'radius_m',1,'mode','thesis_mer');
+s.interstage_model=struct('enabled',true,'length_m',1.2, ...
+    'lower_radius_m',1.2,'upper_radius_m',1.0, ...
+    'areal_density_kg_m2',8);
+s.payload_adapter_model=struct('enabled',true,'length_m',0.4, ...
+    'lower_radius_m',1,'upper_radius_m',0.5, ...
+    'areal_density_kg_m2',10);
+s.wiring_model=struct('enabled',true,'length_m',20, ...
+    'linear_density_kg_m',0.4);
+o=estimate_secondary_structure(s);
+verifyGreaterThan(testCase,o.fairing_kg,0);
+verifyGreaterThan(testCase,o.interstage_kg,0);
+verifyGreaterThan(testCase,o.payload_adapter_kg,0);
+verifyEqual(testCase,o.wiring_kg,8,'AbsTol',1e-12);
+verifyEqual(testCase,o.total_kg,o.fairing_kg+o.interstage_kg+ ...
+    o.payload_adapter_kg+o.wiring_kg,'RelTol',1e-12);
+
+stage=struct('name','L','propellant_name','LOX/RP1', ...
+    'propulsion_type','liquid','Isp_s',300,'thrust_N',1e6, ...
+    'nozzle_area_ratio',30,'mixture_ratio_OF',2.27, ...
+    'fairing_model',s.fairing_model,'interstage_model',s.interstage_model, ...
+    'payload_adapter_model',s.payload_adapter_model, ...
+    'wiring_model',s.wiring_model,'dry_mass_margin_fraction',0.10);
+m=modern_stage_mer(stage,1000,10000);
+verifyGreaterThan(testCase,m.secondary_structure_kg,0);
+verifyGreaterThan(testCase,m.dry_mass_margin_kg,0);
+base=m.total_kg-m.dry_mass_margin_kg;
+verifyEqual(testCase,m.dry_mass_margin_kg,0.10*base,'RelTol',1e-12);
+end
