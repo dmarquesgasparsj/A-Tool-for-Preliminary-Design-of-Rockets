@@ -125,8 +125,18 @@ for i=1:N
     stages(i).name=source.name;
     stages(i).Isp_s=source.Isp_s;
     stages(i).thrust_N=source.thrust_N;
-    stages(i).mp_kg=sized.mp_kg;
-    stages(i).ms_kg=sized.ms_kg;
+    if isfield(sized,'usable_propellant_kg')
+        stages(i).mp_kg=sized.usable_propellant_kg;
+    else
+        stages(i).mp_kg=sized.mp_kg;
+    end
+    reserve=0;
+    if isfield(sized,'reserve_propellant_kg')
+        reserve=sized.reserve_propellant_kg;
+    end
+    % Reserve propellant remains aboard at burnout and is therefore carried
+    % with the jettisoned/non-burned mass in the trajectory representation.
+    stages(i).ms_kg=sized.ms_kg+reserve;
     stages(i).fs_struct=sized.epsilon;
     stages(i).CdA_m2=cdA;
     stages(i).reference_area_m2=area;
