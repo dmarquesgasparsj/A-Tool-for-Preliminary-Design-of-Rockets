@@ -23,6 +23,20 @@ ref.reported.coast_time_s=[3 3];
 ref.reported.free_flight_altitude_approx_m=120e3;
 ref.reported.table6_6_reference_glow_kg=668577;
 ref.reported.table6_6_simulated_glow_kg=626563;
+ref.reported.table6_6_simulated_mp_kg=[395390 142878 34127];
+ref.reported.table6_6_simulated_ms_kg=[36563 12323 5282];
+ref.reported.table6_6_simulated_m0_kg=[626563 194610 39409];
+ref.reported.table6_6_deviation_percent=[ ...
+    5.7 19.5 6.3; 8.5 5.2 11; 26.7 26.2 22.3];
+
+ref.reported.table6_7_reference_diameter_m=[7.4 4.1 4.1];
+ref.reported.table6_7_reference_length_m=[21.2 14.39 6.5];
+ref.reported.table6_7_reference_volume_m3=[911.3 190 85.8];
+ref.reported.table6_7_simulated_diameter_m=[7.4 4.1 4.1];
+ref.reported.table6_7_simulated_length_m=[20.1 13.3 4.9];
+ref.reported.table6_7_simulated_volume_m3=[864 175.5 64.7];
+ref.reported.table6_7_deviation_length_percent=[5.2 7.6 24.6];
+ref.reported.table6_7_deviation_volume_percent=[5.2 7.6 24.6];
 
 names={'RD-253 x6','RD-0210 x4','RD-0212 + vernier','DM-3 / RD-0214'};
 mp=[419410 156113 46562 15200];
