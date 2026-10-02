@@ -47,15 +47,19 @@ The staged TPBVP scheduler and schema adapters are 2026 reconstruction infrastru
 
 The recovered extended-atmosphere MATLAB file contains an explicit third-party copyright notice. It is **not** copied into the MIT-licensed source tree. The public `thesis_extended_atmosphere.m` is an independent implementation informed by the thesis and cross-checked against recovered layer data.
 
-## Remaining trajectory work
+## Historical validation closure
 
-The trajectory is substantially closer to the thesis architecture, but the following items still require work before historical validation can be called complete:
+Historical validation is now closed as a **forensic reconstruction**, not as a claim of exact reproduction. The executable report is `validation/run_validation_closure.m`; the findings are documented in [VALIDATION_CLOSURE.md](VALIDATION_CLOSURE.md).
 
-- validate Vega and Proton K end-to-end against the thesis plots and reported performance;
-- reproduce the exact historical interpretation of stage coast times and stage separation timing;
-- investigate the differences between the six-state recovered `ascent_odes_tf.m` implementation and the eight-state PMP derivation printed in the thesis;
-- couple final-stage propellant excess/shortfall back into the mass-model Delta-V loop exactly as described in Chapter 5;
-- add long coast phases for GEO/interplanetary missions.
+The remaining disagreements are classified rather than left as an undefined backlog:
+
+- Vega Kn=5 timing and final-stage reserve are not reproduced;
+- literal Proton Table 6.2 inputs cannot lift off, while recovered development inputs use a different thrust/Isp/mass convention;
+- Proton and Ariane staged TPBVP cases can encounter singular collocation Jacobians;
+- the exact Ariane 23-point Delta-V search sequence is absent from the surviving record;
+- the six-state recovered `ascent_odes_tf.m` and the eight-state thesis PMP derivation remain distinct pieces of historical evidence.
+
+Future work on these items requires new historical evidence or a deliberately new numerical method; neither should be presented as recovery of the lost final 2014 implementation.
 
 ## Current use
 
