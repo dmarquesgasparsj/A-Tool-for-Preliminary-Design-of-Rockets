@@ -28,11 +28,11 @@ report = run_validation_closure(struct('print_summary',true));
 
 Chapter 6 Table 6.4 reports a Vega first-section reference mass of **132,530 kg** and a simulated value of **126,085 kg**. Applying thesis Eq. (6.1) gives approximately **4.86%**, consistent with the printed **4.8%** after table rounding.
 
-The stage propellant/structural deviations and the Table 6.5 length/volume deviations are stored as machine-readable validation fixtures and re-evaluated in CI. Most reproduce Eq. (6.1) to the printed rounding, but the Stage-3 structural cell is an exception: 833 kg vs 906.2 kg gives about 8.79%, while Table 6.4 prints 8.1%. The repository preserves this as a published arithmetic/transcription anomaly rather than changing either source value.
+The stage propellant/structural deviations and the Table 6.5 length/volume deviations are stored as machine-readable validation fixtures and re-evaluated in CI. Most reproduce Eq. (6.1) to the printed rounding, but two structural cells do not. Stage 3: 833 kg vs 906.2 kg gives about 8.79%, while Table 6.4 prints 8.1%. Stage 4: 418 kg vs 175.6 kg gives about 57.99%, while the table prints 57.6%. The repository preserves both as published arithmetic/transcription anomalies rather than changing source values.
 
 There is one explicit Table 6.4 convention ambiguity in the final AVUM `m0` cell. The printed component masses imply **692.2 kg** before payload; adding the 1,500 kg payload gives **2,192.2 kg**. The printed **11.8%** deviation is consistent with the no-payload convention. Both values are preserved and the ambiguous cell is excluded from the automatic table-rounding assertion.
 
-**Classification: verified source transcription, with one arithmetic/transcription anomaly and one documented Stage-4 mass convention ambiguity.**
+**Classification: verified source transcription, with two structural arithmetic/transcription anomalies and one documented Stage-4 `m0` convention ambiguity.**
 
 ### Atmospheric trajectory
 
@@ -134,6 +134,16 @@ rather than inventing a path that happens to include the reported optimum.
 The interpretation of the reported 8,000 kN booster thrust is also preserved as an explicit 2026 inference: the generalized fixture treats it as per physical booster, because the original ~14,000 kN figure appears to describe the pair and the stated +14% search range is compatible with roughly 2 × 8,000 kN.
 
 **Classification: verified thesis optimum + provenance gap for exact search history.**
+
+### 2026 generalized mass benchmark
+
+Running the same two named Ariane configurations through the generalized 2026 parallel-booster sizing model gives approximately:
+
+- original-point GLOW: **720,187 kg**;
+- reported-optimum-point GLOW: **502,891 kg**;
+- reduction between those two 2026 model points: **30.17%**.
+
+This is **not** evidence that the 2014 optimization should have achieved a 30% reduction. The modern component aggregation, booster interpretation and Delta-V treatment differ from the lost final 2014 implementation, and the exact historical 23-point Delta-V sequence is unavailable. These numbers are retained as a modern-model comparison baseline only.
 
 ### Reconstructed booster trajectory
 
