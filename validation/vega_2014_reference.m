@@ -17,6 +17,27 @@ ref.reported.max_q_altitude_approx_m = 9000;
 ref.reported.coast_time_s = [3 3 3];
 ref.reported.table6_4_reference_glow_kg = 132530;
 ref.reported.table6_4_simulated_glow_kg = 126085;
+ref.reported.table6_4_simulated_mp_kg = [83211.3 22918 8566.2 516.6];
+ref.reported.table6_4_simulated_ms_kg = [8595 2396.1 906.2 175.6];
+% The OCR/text extraction around the final m0 cell is internally ambiguous:
+% printed component masses sum to 692.2 kg before payload, while extracted
+% text can read 2192.2 kg with payload included. The published 11.8%%
+% deviation is consistent with 692.2 vs 785, so both interpretations are
+% preserved instead of silently choosing one.
+ref.reported.table6_4_simulated_m0_kg = [126085 34248.9 11663.8 NaN];
+ref.reported.table6_4_stage4_m0_without_payload_kg = 692.2;
+ref.reported.table6_4_stage4_m0_with_payload_kg = 2192.2;
+ref.reported.table6_4_deviation_percent = [ ...
+    5.83 15.6 4.8; 4.1 29.8 6.8; 15.3 8.1 6.1; 40.7 57.6 11.8];
+
+ref.reported.table6_5_reference_diameter_m = [3 1.9 1.9 2.2];
+ref.reported.table6_5_reference_length_m = [11.2 8.39 4.12 2.0];
+ref.reported.table6_5_reference_volume_m3 = [79.1 23.8 11.7 7.6];
+ref.reported.table6_5_simulated_diameter_m = [3 1.9 1.9 2.2];
+ref.reported.table6_5_simulated_length_m = [10.6 8.0 3.7 1.5];
+ref.reported.table6_5_simulated_volume_m3 = [74.9 22.7 10.5 6.7];
+ref.reported.table6_5_deviation_length_percent = [5.4 4.6 10.2 25];
+ref.reported.table6_5_deviation_volume_percent = [5.3 4.6 10.3 11.8];
 
 names = {'P80','Zefiro 23','Zefiro 9','AVUM'};
 mp = [88365, 23906, 10115, 367];
