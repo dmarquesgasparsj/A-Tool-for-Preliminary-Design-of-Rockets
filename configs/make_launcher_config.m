@@ -2,8 +2,8 @@ function cfg = make_launcher_config(mission, stage_specs)
 %MAKE_LAUNCHER_CONFIG Construct a launcher independently of any GUI.
 %
 % mission.payload_kg          required, positive
-% mission.delta_v_budget_m_s  required, positive (trajectory coupling pending)
-% mission.orbit_altitude_km   optional, informational until orbit coupling
+% mission.delta_v_budget_m_s  required, positive initial/coupled budget
+% mission.orbit_altitude_km   optional for mass-only sizing, required by integrated design
 %
 % stage_specs is an array of user-defined stages, ordered bottom to top.
 % Every stage needs:
@@ -60,7 +60,13 @@ empty = struct('name','','propellant_name','', ...
     'skin_model',struct(),'pressure_nozzle',struct(), ...
     'add_pressure_nozzle_shell_mass',false, ...
     'thrust_misalignment_rad',0,'cost_complexity_factor',1, ...
-    'quantity',1);
+    'quantity',1,'drag_model','','reference_area_m2',NaN, ...
+    'nose_cone',struct(),'engine_mass_model',struct(), ...
+    'solid_grain',struct(),'constraint_limits',struct(), ...
+    'constraint_control',struct(),'throttle',1, ...
+    'fairing_model',struct(),'interstage_model',struct(), ...
+    'payload_adapter_model',struct(),'wiring_model',struct(), ...
+    'dry_mass_margin_fraction',0,'propellant_reserve_fraction',0);
 stages = repmat(empty,1,N);
 
 for i = 1:N
@@ -158,13 +164,51 @@ for i = 1:N
         stages(i).epsilon0 = s.epsilon0;
     end
     optional = {'diameter_m','fairing_area_m2', ...
-        'oxidizer_tank_area_m2','fuel_tank_area_m2','Cd_ref','CdA_m2'};
+        'oxidizer_tank_area_m2','fuel_tank_area_m2','Cd_ref','CdA_m2', ...
+        'reference_area_m2'};
     for j = 1:numel(optional)
         key = optional{j};
         if isfield(s,key) && ~isempty(s.(key))
             validateattributes(s.(key),{'numeric'}, ...
                 {'scalar','real','finite','positive'});
             stages(i).(key) = s.(key);
+        end
+    end
+
+    if isfield(s,'drag_model') && ~isempty(s.drag_model)
+        stages(i).drag_model=char(s.drag_model);
+    end
+    structured={'nose_cone','engine_mass_model','solid_grain', ...
+        'constraint_limits','constraint_control','fairing_model', ...
+        'interstage_model','payload_adapter_model','wiring_model'};
+    for jj=1:numel(structured)
+        key=structured{jj};
+        if isfield(s,key) && ~isempty(s.(key))
+            if ~isstruct(s.(key)) || ~isscalar(s.(key))
+                error('make_launcher_config:StructuredField', ...
+                    'stage.%s must be a scalar struct.',key);
+            end
+            stages(i).(key)=s.(key);
+        end
+    end
+
+    if isfield(s,'throttle') && ~isempty(s.throttle)
+        if ~(isa(s.throttle,'function_handle') || ...
+                (isnumeric(s.throttle) && isscalar(s.throttle) && ...
+                 isfinite(s.throttle) && s.throttle>=0 && s.throttle<=1))
+            error('make_launcher_config:Throttle', ...
+                'stage.throttle must be a [0,1] scalar or function handle.');
+        end
+        stages(i).throttle=s.throttle;
+    end
+
+    fractions_optional={'dry_mass_margin_fraction','propellant_reserve_fraction'};
+    for jj=1:numel(fractions_optional)
+        key=fractions_optional{jj};
+        if isfield(s,key) && ~isempty(s.(key))
+            validateattributes(s.(key),{'numeric'}, ...
+                {'scalar','real','finite','>=',0,'<',1});
+            stages(i).(key)=s.(key);
         end
     end
 
@@ -226,6 +270,6 @@ end
 cfg.mission = mission;
 cfg.stages = stages;
 cfg.source = 'User-defined modern launcher configuration';
-cfg.model_status = ['Generalized serial sizing; advanced launch, skin, ', ...
-    'pressure-nozzle, thrust-misalignment and cost fields are preserved.'];
+cfg.model_status = ['Generalized serial sizing; advanced aerodynamic, ', ...
+    'engine, grain, skin, pressure-nozzle, misalignment and cost fields preserved.'];
 end

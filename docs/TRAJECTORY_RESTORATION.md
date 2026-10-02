@@ -55,8 +55,6 @@ The trajectory is substantially closer to the thesis architecture, but the follo
 - reproduce the exact historical interpretation of stage coast times and stage separation timing;
 - investigate the differences between the six-state recovered `ascent_odes_tf.m` implementation and the eight-state PMP derivation printed in the thesis;
 - couple final-stage propellant excess/shortfall back into the mass-model Delta-V loop exactly as described in Chapter 5;
-- add trajectory constraints from Future Work: max dynamic pressure, heat flux, bending load and axial acceleration;
-- develop shape-specific drag correlations (the thesis itself left these as Future Work);
 - add long coast phases for GEO/interplanetary missions.
 
 ## Current use
@@ -70,3 +68,17 @@ traj = simulate_thesis_2014_trajectory(cfg, mass);
 ```
 
 A failed TPBVP solve is returned as an explicit trajectory status rather than being interpreted as a valid orbital solution.
+
+
+## 2026 extensions now implemented
+
+The historical trajectory reconstruction remains unchanged for regression. The modern trajectory path additionally supports:
+
+- shape-specific Appendix-A nose drag using a modified-Newtonian hypersonic extension;
+- max-q, heat-flux, bending and axial-acceleration evaluation;
+- active preliminary constraint-aware throttling;
+- pressure-aware thrust;
+- inclined and air-launch initial conditions;
+- deterministic and stochastic thrust-misalignment analysis.
+
+These additions must not be interpreted as recovered 2014 behavior.

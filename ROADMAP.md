@@ -1,88 +1,84 @@
 # Roadmap — From the 2014 Thesis to the AI-Assisted 2026 Project
 
-This roadmap separates three things that must not be conflated:
+This roadmap separates three layers:
 
-1. the scientific work documented in the 2014 MSc thesis;
+1. scientific work documented in the 2014 MSc thesis;
 2. unfinished thesis-era MATLAB development files recovered in 2026;
 3. new implementation and extensions developed in 2026 with AI assistance.
 
 ## AI-assisted development statement
 
-The 2026 reconstruction and extension is **AI-assisted**. ChatGPT is being used to help recover intent from the thesis and surviving source files, refactor MATLAB code, write tests, identify inconsistencies, document assumptions and implement new modules.
+The 2026 reconstruction and extension is **AI-assisted**. ChatGPT is used to help recover intent from the thesis and surviving source files, refactor MATLAB code, implement new modules, write tests, identify inconsistencies and document assumptions.
 
-AI output is not treated as scientific evidence. Equations and historical claims must be traceable to the thesis or cited technical sources, and new modelling choices must be labelled as such and validated with regression tests or external reference cases.
+AI output is **not** scientific evidence. Historical claims remain traceable to the thesis/recovered files; new equations and modelling choices are labelled as 2026 extensions and should be validated against technical references or external data before operational use.
 
-## Immediate priority: integrated thesis architecture
+## Current implementation state
 
-The thesis couples the mass model and trajectory model by iterating the Delta-V estimate after computing drag and gravity losses. The modern repository now contains the first explicit version of that feedback loop.
+The modern code paths required for the original thesis architecture and the explicitly listed Future Work are now implemented at **preliminary-design fidelity**.
 
-Current state: **partially implemented**.
+That statement does **not** mean that every historical number has been reproduced or that every extension is flight-certified. Two separate questions are tracked:
 
-Implemented in the modern coupled path:
+- **implementation completeness:** whether the capability exists in code with tests;
+- **validation completeness:** whether the capability reproduces historical/reference data within an agreed tolerance.
 
-- generalized serial-stage MER mass sizing;
-- stage masses passed directly to the trajectory propagator;
-- drag and gravity loss integration;
-- dynamic pressure calculation;
-- iterative Delta-V update with a default 0.01% convergence criterion;
-- explicit lift-off thrust-to-weight diagnostic;
-- separation between “Delta-V loop converged” and “requested orbit reached”.
+The remaining historical discrepancies are validation/provenance questions rather than missing software:
 
-Still required before calling this a full reproduction of the thesis integrated model:
+- Vega: reconstructed Kn=5 transition timing and last-stage reserve differ from the reported thesis values;
+- Proton K: the literal Table 6.2 thrust convention gives lift-off T/W below 1, while recovered development values produce lift-off;
+- staged TPBVP convergence remains sensitive for some Proton conditions;
+- Ariane 5: the generalized booster model is implemented, but exact reproduction of the lost 2014 23-point Delta-V search path is not possible from surviving evidence;
+- exact treatment of final-stage propellant shortfall in the lost final implementation is not recoverable from the available source.
 
-- resolve/document the Vega atmospheric transition discrepancy (reconstruction Kn=5 timing differs from the reported 97.1 s), then validate the staged TPBVP and Proton case;
-- shape-specific nose-cone aerodynamics beyond the thesis-wide Cd(Mach) fit;
-- interstage/fairing structural integration beyond the implemented cylindrical stage geometry and optional skin-mass model;
-- historical end-to-end validation of the implemented booster trajectory coupling;
-- exact treatment of propellant *shortfall* in the lost 2014 final implementation (the documented excess-residual Tsiolkovsky feedback is implemented);
-- Vega, Proton K and Ariane 5 end-to-end validation.
+These points must not be tuned away merely to reproduce a historical table.
 
 ## Original thesis Future Work
 
-| 2014 proposal | 2026 status | Next implementation |
+| 2014 proposal | 2026 implementation status | Current implementation |
 | --- | --- | --- |
-| GUI for non-programmers | Partial | Keep menus, then add a richer MATLAB app only after the scientific API is stable. |
-| Chamber pressure, exit pressure and nozzle geometry in mass/thrust models | **Implemented / experimental** | Pressure-aware isentropic nozzle sizing, ambient-pressure thrust and optional nozzle shell mass are implemented; validate against engine reference cases before making it the default. |
-| More realistic engine mass model | Partial | Replace the current low-fidelity thrust-based MER with propulsion/pressure/performance-aware alternatives. |
-| More realistic drag model for nose-cone configurations | Partial | Appendix A geometry and thesis-wide Cd(Mach) are implemented; add shape-specific analytical/CFD correlations as a new validated extension. |
-| Trajectory constraints: max-q, heat flux, bending load, axial acceleration | **Implemented as evaluators** | Max-q, Sutton-Graves heat flux, preliminary bending and axial acceleration limits return pass/fail. Active throttle/guidance response to violations remains future work. |
-| More booster options, grain geometry, nose cones and solid propellants | **Partial / advanced** | Generalized parallel booster sizing and trajectory coupling are implemented; next add grain-geometry submodels and broader solid-propellant models. |
-| Air-launched and initially inclined launchers | **Implemented / experimental** | Generalized initial altitude, speed and flight-path angle are implemented while preserving the historical ground-launch default; next add full 3D heading/azimuth and carrier-release validation. |
-| Cost model | **Implemented as transparent CER framework** | Development, production, operations and learning-curve terms are implemented. Normalized defaults are dimensionless; monetary estimates require a calibrated external CER dataset. |
-| GEO transfers, interplanetary trajectories and long coast phases | **Implemented / preliminary** | Hohmann GEO, patched-conic interplanetary estimates and 3D long-coast propagation are implemented; next add Lambert/ephemeris targeting and capture manoeuvres. |
-| Thrust misalignment, non-spherical Earth gravity, Moon/Sun perturbations | **Partial / implemented through J2** | Deterministic thrust misalignment and optional Earth J2 are implemented; Moon/Sun third-body gravity and stochastic pointing-error Monte Carlo remain future work. |
-| Rewrite in C/C++ for speed | Deferred / conditional | Profile MATLAB first. Use vectorization, parallel execution or selective MEX/C++ only for measured bottlenecks. |
+| GUI for non-programmers | **Implemented** | rocket_design_app.m provides a unified MATLAB GUI for mission/stage editing and access to integrated, booster and mission workflows. Menus and programmatic APIs remain available. |
+| Chamber pressure, exit pressure and nozzle geometry in mass/thrust models | **Implemented** | pressure_aware_nozzle.m performs choked/isentropic nozzle sizing, exit pressure, ambient-pressure thrust and optional shell mass. |
+| More realistic engine mass model | **Implemented as calibrated framework** | estimate_engine_mass.m supports the thesis MER and a reference-engine power-law model using thrust, chamber pressure, area ratio and O/F. Calibration coefficients are explicit rather than invented. |
+| More realistic drag model for nose-cone configurations | **Implemented as analytical preliminary model** | Appendix-A profiles feed a modified-Newtonian hypersonic forebody-pressure model, smoothly blended with the thesis Cd(Mach) law. CFD/experimental validation remains a fidelity upgrade, not missing functionality. |
+| Trajectory constraints: max-q, heat flux, bending load, axial acceleration | **Implemented with active response** | Evaluators return histories/margins/pass-fail; constraint_aware_throttle.m provides a transparent throttle response and the ascent integrator burns stages to propellant depletion under throttling. |
+| More booster options, grain geometry, nose cones and solid propellants | **Implemented at conceptual fidelity** | Arbitrary parallel-booster count, trajectory coupling and discrete optimization are implemented. solid_grain_ballistics.m adds BATES, inhibited-core and end-burner grains with configurable Saint-Robert propellant law; shape-specific nose drag is shared with serial stages. |
+| Air-launched and initially inclined launchers | **Implemented** | Generalized initial altitude, velocity and flight-path angle are supported, with Earth rotation handled consistently. Full 3D heading/azimuth is a higher-fidelity extension beyond the original 2D thesis model. |
+| Cost model | **Implemented as transparent CER framework** | Development, production, operations and learning-curve terms are implemented. Monetary output requires a calibrated external CER dataset. |
+| GEO transfers, interplanetary trajectories and long coast phases | **Implemented at preliminary astrodynamics fidelity** | GEO Hohmann, interplanetary Hohmann/patched-conic analysis and long-coast 3D propagation are available. Lambert/ephemeris targeting remains a higher-fidelity mission-design extension. |
+| Thrust misalignment, non-spherical Earth gravity, Moon/Sun perturbations | **Implemented** | Deterministic thrust misalignment, stochastic pointing-error Monte Carlo, Earth J2, Sun/Moon third-body gravity and an external ephemeris interface are implemented. Built-in Sun/Moon positions are explicitly low-order sensitivity models. |
+| Rewrite in C/C++ for speed | **Deferred by design** | MATLAB is retained for traceability. Profiling should identify bottlenecks before selective MEX/C++ acceleration; a full rewrite is no longer assumed to be beneficial. |
 
-## Why C/C++ is no longer an automatic priority
+## Fidelity boundaries
 
-In 2014, rewriting the whole program in C or C++ was a reasonable route to shorter simulation times. In the modern project it should be a performance decision, not a goal by itself.
+“Implemented” in this roadmap means the requested preliminary-design capability exists, is exposed through a documented numerical API, and has regression/invariant tests. It does **not** mean:
 
-The preferred sequence is:
+- certified structural design;
+- CFD-quality aerodynamics;
+- combustion-instability or erosive-burning modelling;
+- operational GNC;
+- high-precision planetary ephemerides;
+- calibrated monetary cost estimates.
 
-1. make the MATLAB scientific model correct and reproducible;
-2. profile representative optimization runs;
-3. improve algorithms and vectorization;
-4. parallelize independent design evaluations where useful;
-5. move only genuinely expensive kernels to C/C++/MEX if profiling shows a clear benefit.
+Those are higher-fidelity engineering products requiring external datasets and specialist validation.
 
-A full rewrite would make scientific comparison with the thesis harder and increase maintenance cost without guaranteeing that the real bottleneck is solved.
-
-## Suggested milestones
+## Milestones
 
 ### v0.4 — Integrated thesis core
-The three-phase architecture, documented interstage coasts, final-stage residual-propellant Delta-V feedback and generalized parallel-booster sizing are implemented. Vega reproduces max-q altitude but still disagrees on Kn-transition timing/last-stage reserve; the literal Proton Table 6.2 thrust gives T/W < 1, while the recovered development dynamics reach Kn=5 but the staged TPBVP still exposes a singular-Jacobian case. These discrepancies are validation targets, not values to tune away.
+Generalized serial mass sizing, 2D ascent/loss feedback, historical Kn=5 atmospheric reconstruction, staged TPBVP, explicit coast phases and final-stage residual-propellant feedback are implemented. Historical Vega/Proton discrepancies are preserved as validation findings.
 
 ### v0.5 — Aerodynamics, propulsion and constraints
-Pressure-aware nozzle geometry/thrust and max-q, heat-flux, bending and axial-acceleration evaluators are implemented. Remaining work is validation, shape-specific drag beyond the thesis-wide Cd(Mach), and active guidance/throttle constraint handling.
+Pressure-aware nozzle performance, calibrated engine-mass framework, shape-specific analytical nose drag, max-q/heat/bending/axial evaluators and active throttle response are implemented.
 
 ### v0.6 — Configuration generalization
-The generic "zeroth-stage" parallel-booster mass/performance model, trajectory coupling and a toolbox-free discrete optimizer are implemented. Inclined/air-launch initial conditions are also implemented. Remaining work: grain-geometry submodels, full 3D launch heading/azimuth and broader validation.
+Generalized parallel boosters, discrete optimization, booster trajectory coupling and configurable solid-grain ballistics are implemented.
 
 ### v0.7 — Mission and economic extensions
-Inclined/air-launch initial conditions, transparent CER cost modelling, GEO Hohmann transfer, interplanetary Hohmann/patched-conic analysis and long-coast 3D propagation are implemented. Remaining work: ephemeris/Lambert targeting, arrival/capture manoeuvres and calibrated monetary CER datasets.
+Inclined/air launch, cost CER framework, GEO/interplanetary preliminary analysis and long-coast propagation are implemented.
 
 ### v0.8 — Higher-fidelity dynamics
-Deterministic thrust misalignment and Earth J2 are implemented. Remaining work: 3D ascent heading/azimuth, stochastic pointing errors and, where mission duration justifies it, lunar/solar third-body effects.
+Thrust misalignment, pointing-error Monte Carlo, Earth J2 and Sun/Moon third-body gravity are implemented, with an interface for external ephemerides.
+
+### v0.9 — Validation closure
+Focus exclusively on reproducible Vega, Proton K and Ariane 5 validation reports, uncertainty/sensitivity analysis, benchmark datasets and documentation consistency.
 
 ### v1.0 — Validated open design tool
-Documented end-to-end validation, reproducible examples, stable API/GUI and performance profiling. Selective native-code acceleration only if benchmarks justify it.
+Stable API/GUI, documented fidelity limits, reproducible reference cases and performance profiling. Selective native-code acceleration only if measured benchmarks justify it.

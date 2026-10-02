@@ -8,9 +8,10 @@ function cfg = validate_config(cfg)
 %   And either:
 %     fs_struct  OR  ms_kg
 %
-%   The function intentionally keeps the schema small. Future thesis-model
-%   extensions (boosters, geometry, MER sizing, nozzle expansion, Cd(Mach))
-%   should be added here so all configurations share one contract.
+%   This validator intentionally checks the core staged-trajectory contract.
+%   Advanced fields such as shape drag, pressure-aware nozzles, throttle
+%   constraints and secondary structures are preserved and validated by
+%   their dedicated modules.
 
 if ~isstruct(cfg) || ~isfield(cfg, 'stages') || isempty(cfg.stages)
     error('validate_config:InvalidConfiguration', ...

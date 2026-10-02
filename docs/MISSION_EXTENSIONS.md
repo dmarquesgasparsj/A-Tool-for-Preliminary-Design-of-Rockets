@@ -52,7 +52,7 @@ It is a preliminary mission-sizing model, not an ephemeris-based Lambert solver.
 NASA describes Hohmann transfers as a baseline way to reason about interplanetary trajectories:
 https://science.nasa.gov/learn/basics-of-space-flight/chapter4-1/
 
-## Long coast phases and J2
+## Long coast phases, J2 and third-body gravity
 
 `propagate_orbit_3d()` integrates a Cartesian Earth-centred inertial coast using central gravity and optional J2. This is intentionally separate from the local-Cartesian thesis TPBVP, whose constant-gravity assumptions are not suitable for multi-hour or multi-day orbital coasts.
 
@@ -114,3 +114,22 @@ The menu offers:
 - normalized launcher cost trade.
 
 All numerical functions remain independently callable without the GUI.
+
+
+## Sun/Moon third-body gravity
+
+`propagate_orbit_3d.m` now accepts:
+
+- `include_sun=true`;
+- `include_moon=true`;
+- or an external `third_body_ephemeris(t)` callback returning body positions and gravitational parameters.
+
+`third_body_acceleration.m` uses the standard differential third-body acceleration in the Earth-centred frame. The built-in `approximate_sun_moon_ephemeris.m` uses circular mean orbits only and is deliberately labelled for sensitivity studies. Precision mission analysis should provide external JPL/Horizons or equivalent ephemeris states.
+
+The constants used by the built-in sensitivity model are documented against JPL Solar System Dynamics / NASA values in the project source comments.
+
+## Stochastic thrust pointing
+
+`thrust_misalignment_monte_carlo.m` complements the deterministic misalignment already supported in the ascent equations. It samples a reproducible Gaussian pointing error and reports axial-thrust efficiency, transverse fraction and idealized Delta-V loss statistics.
+
+This does not replace full stochastic trajectory Monte Carlo; it provides a fast preliminary pointing-sensitivity layer.

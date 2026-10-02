@@ -138,7 +138,7 @@ The atmospheric phase used a zero-lift / zero-angle-of-attack gravity turn.
 
 The trajectory state included altitude, downrange, velocity, flight-path angle and mass. The equations were integrated using MATLAB `ode45`.
 
-The thesis used a Mach-dependent drag coefficient and cross-sectional reference area. The modern reconstruction now implements Eq. (3.49) directly for generalized stages with known diameter; shape-specific drag remains a Future Work extension.
+The thesis used a Mach-dependent drag coefficient and cross-sectional reference area. Historical regression uses Eq. (3.49) directly. The thesis left shape-specific drag as Future Work; the separate 2026 modern extension now combines the Appendix-A nose profiles with a modified-Newtonian high-Mach pressure-drag model.
 
 ### 6.3 Atmospheric transition
 
@@ -158,7 +158,7 @@ The formulation contained:
 - a linear-tangent steering law;
 - boundary conditions for circular-orbit altitude, horizontal velocity and zero vertical velocity.
 
-The thesis describes a shooting-method formulation and also reports the use of MATLAB `bvp4c` for the boundary-value solution. The modern reconstruction now provides `thesis_free_flight_tpbvp.m`, implementing the eight state/costate equations, free final time, `lambda1(tf)=0`, and the minimum-time transversality condition `H(tf)+1=0`. It is currently a single continuous-thrust segment and is not yet connected to the staged atmospheric trajectory.
+The thesis describes a shooting-method formulation and also reports the use of MATLAB `bvp4c` for the boundary-value solution. The reconstruction provides both the core TPBVP formulation and a staged free-flight solver, connected to the reconstructed atmospheric phase through the Knudsen transition. Historical Vega/Proton closure remains a validation question rather than an unimplemented connection.
 
 ## 7. Aerodynamics
 

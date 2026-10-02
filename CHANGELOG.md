@@ -58,15 +58,8 @@ Historical thesis results included:
 - Added explicit documentation of the thesis architecture and reconstruction policy.
 - Added an open-source licence.
 
-### Restoration roadmap
+### 2026 completion status
 
-Still to be restored from the thesis:
+The repository now contains implementations for the structural-factor / MER mass model, propellant and geometry data, serial and parallel staging, thesis `Cd(Mach)`, Knudsen transition, staged TPBVP free flight, coupled `Delta-V` feedback, Future-Work propulsion/aerodynamic/constraint extensions, air/inclined launch, cost studies and preliminary GEO/interplanetary analysis.
 
-- complete MER / structural-factor mass model;
-- propellant database and geometry model;
-- boosters and parallel staging;
-- thesis `Cd(Mach)` model;
-- Knudsen transition criterion;
-- TPBVP free-flight phase;
-- coupled `Delta-V` convergence;
-- Vega, Proton K and Ariane 5 regression cases.
+The remaining open work is primarily **validation and provenance closure**: reproducing Vega, Proton K and Ariane 5 end-to-end results where surviving 2014 evidence permits it, quantifying uncertainty, and calibrating modern empirical extensions against external datasets.

@@ -8,8 +8,8 @@ function [result,cfg] = run_integrated_design(mission,stage_specs,opts)
 %   result = run_integrated_design(mission,stage_specs);
 %   result = run_integrated_design(cfg);
 %
-% The current trajectory layer is deliberately labelled experimental until
-% the full thesis Knudsen/TPBVP model is restored.
+% This runner uses the modern coupled 2D ascent model. Historical Kn=5 and
+% staged-TPBVP reconstruction is available through dedicated validation APIs.
 
 root=fileparts(mfilename('fullpath'));
 addpath(root);
@@ -59,7 +59,7 @@ fprintf('Current trajectory reaches requested circular-orbit tolerance: %s\n', .
     logical_text(result.orbit_reached));
 if ~result.orbit_reached
     fprintf(['Trajectory status: NOT orbit-validated. Restore the thesis ', ...
-        'Knudsen transition and TPBVP/free-flight phase next.\n']);
+        'three-phase validation path for historical reconstruction diagnostics.\n']);
 end
 
 if opts.show_plots
