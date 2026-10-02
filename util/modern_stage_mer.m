@@ -43,7 +43,8 @@ end
 mer = thesis_mer_components(s,masses,p,geometry);
 components = struct('fuel_tank_kg',0,'oxidizer_tank_kg',0, ...
     'motor_casing_kg',0,'thrust_structure_kg',mer.thrust_structure_kg, ...
-    'avionics_kg',mer.avionics_kg,'engine_kg',0,'nozzle_kg',0, ...
+    'avionics_kg',mer.avionics_kg,'engine_kg',0,'engine_mass_detail',struct(), ...
+    'nozzle_kg',0, ...
     'insulation_kg',0,'fairing_kg',0,'skin_kg',0, ...
     'pressure_nozzle_shell_kg',0,'total_kg',0);
 
@@ -66,6 +67,24 @@ switch lower(stage.propulsion_type)
         components.engine_kg = mer.engine_kg;
     otherwise
         error('modern_stage_mer:InvalidPropulsion','Unknown propulsion type.');
+end
+
+% Optional 2026 engine-mass Future Work model. The historical MER remains
+% the default, while a calibrated power law can include Pc, AR and O/F.
+if any(strcmpi(stage.propulsion_type,{'liquid','hybrid'}))
+    use_model=isfield(stage,'engine_mass_model') && ...
+        isstruct(stage.engine_mass_model) && ~isempty(fieldnames(stage.engine_mass_model));
+    if use_model
+        enabled=true;
+        if isfield(stage.engine_mass_model,'enabled')
+            enabled=logical(stage.engine_mass_model.enabled);
+        end
+        if enabled
+            detail=estimate_engine_mass(stage,stage.engine_mass_model);
+            components.engine_kg=detail.mass_kg;
+            components.engine_mass_detail=detail;
+        end
+    end
 end
 
 if isfinite(mer.fairing_kg)
