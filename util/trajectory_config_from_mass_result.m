@@ -10,6 +10,7 @@ function traj_cfg = trajectory_config_from_mass_result(cfg, mass_result, opts)
 %                                  otherwise explicit constant CdA
 %   'thesis_mach_polynomial'    -> require diameter/reference area
 %   'constant_cda'              -> use explicit CdA or Cd_ref*area
+%   'shape_specific'             -> Appendix-A nose profile + 2026 drag extension
 %
 % opts.default_Cd is used only by constant_cda when deriving CdA.
 
@@ -19,7 +20,7 @@ if ~isfield(opts,'drag_model'), opts.drag_model='auto'; end
 validateattributes(opts.default_Cd,{'numeric'}, ...
     {'scalar','real','finite','positive'});
 policy=lower(char(opts.drag_model));
-if ~ismember(policy,{'auto','thesis_mach_polynomial','constant_cda'})
+if ~ismember(policy,{'auto','thesis_mach_polynomial','constant_cda','shape_specific','shape_specific_modified_newtonian'})
     error('trajectory_config_from_mass_result:DragModel', ...
         'Unknown drag model policy: %s.',policy);
 end
@@ -33,7 +34,8 @@ N=numel(cfg.stages);
 template=struct('name','','Isp_s',0,'thrust_N',0, ...
     'mp_kg',0,'ms_kg',0,'fs_struct',0,'CdA_m2',NaN, ...
     'reference_area_m2',NaN,'diameter_m',NaN, ...
-    'drag_model','constant_cda','thrust_misalignment_rad',0);
+    'drag_model','constant_cda','thrust_misalignment_rad',0, ...
+    'nose_cone',struct(),'pressure_nozzle',struct());
 stages=repmat(template,1,N);
 
 for i=1:N
@@ -46,7 +48,10 @@ for i=1:N
         isfinite(source.CdA_m2) && source.CdA_m2>0;
 
     if strcmp(policy,'auto')
-        if has_diameter
+        if isfield(source,'drag_model') && any(strcmpi(source.drag_model, ...
+                {'shape_specific','shape_specific_modified_newtonian'}))
+            model='shape_specific';
+        elseif has_diameter
             model='thesis_mach_polynomial';
         elseif has_cda
             model='constant_cda';
@@ -74,6 +79,25 @@ for i=1:N
             end
             % CdA is retained only as a nominal compatibility value.
             cdA=opts.default_Cd*area;
+
+        case {'shape_specific','shape_specific_modified_newtonian'}
+            if ~isfield(source,'nose_cone') || ~isstruct(source.nose_cone) || ...
+                    isempty(fieldnames(source.nose_cone))
+                error('trajectory_config_from_mass_result:MissingNoseCone', ...
+                    'Stage %d (%s) requires nose_cone for shape-specific drag.', ...
+                    i,source.name);
+            end
+            if isfield(source.nose_cone,'radius_m') && ...
+                    isfinite(source.nose_cone.radius_m) && source.nose_cone.radius_m>0
+                area=pi*source.nose_cone.radius_m^2;
+            elseif has_diameter
+                area=pi*source.diameter_m^2/4;
+            else
+                error('trajectory_config_from_mass_result:MissingAerodynamics', ...
+                    'Shape-specific drag requires nose radius or diameter.');
+            end
+            cdA=opts.default_Cd*area;
+            model='shape_specific';
 
         case 'constant_cda'
             if has_cda
@@ -107,6 +131,12 @@ for i=1:N
     stages(i).reference_area_m2=area;
     stages(i).diameter_m=diameter;
     stages(i).drag_model=model;
+    if isfield(source,'nose_cone') && isstruct(source.nose_cone)
+        stages(i).nose_cone=source.nose_cone;
+    end
+    if isfield(source,'pressure_nozzle') && isstruct(source.pressure_nozzle)
+        stages(i).pressure_nozzle=source.pressure_nozzle;
+    end
     if isfield(source,'thrust_misalignment_rad') && ...
             isfinite(source.thrust_misalignment_rad)
         stages(i).thrust_misalignment_rad=source.thrust_misalignment_rad;
