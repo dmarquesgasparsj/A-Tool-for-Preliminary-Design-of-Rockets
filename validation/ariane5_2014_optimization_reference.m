@@ -68,6 +68,8 @@ ref.optimum.masses.upper_mp_kg=2217;
 ref.optimum.masses.upper_ms_kg=4313;
 ref.optimum.reported_vehicle_mass_kg=680076.5;
 ref.original.reported_vehicle_mass_kg=764140;
+ref.original.table6_11_m0_kg=[764140 204140 19440];
+ref.optimum.table6_11_simulated_m0_kg=[680076.5 144671.1 6530];
 ref.optimum.reported_mass_reduction_kg= ...
     ref.original.reported_vehicle_mass_kg-ref.optimum.reported_vehicle_mass_kg;
 ref.optimum.reported_GLOW_reduction_percent=11;
