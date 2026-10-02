@@ -16,21 +16,40 @@ verifyEqual(testCase,r,[10 25],'AbsTol',1e-12);
 verifyTrue(testCase,isnan(historical_percent_deviation(0,1)));
 end
 
-function testChapter6TablesCloseWithinPrintedRounding(testCase)
+function testChapter6TablesAndPublishedAnomalies(testCase)
 r=run_validation_closure(struct( ...
     'run_full_trajectory',false,'run_ariane_trajectory',false));
 
-verifyEqual(testCase,r.vega.mass_table.status,'verified');
-verifyLessThan(testCase,r.vega.mass_table.max_rounding_error_percent,0.12);
-verifyLessThan(testCase,r.vega.geometry_table.max_rounding_error_percent,0.12);
+% Vega: geometry and nearly all mass cells reproduce Eq. 6.1, but the
+% printed Stage-3 structural deviation is inconsistent with 833/906.2 kg.
+verifyEqual(testCase,r.vega.mass_table.status, ...
+    'verified_with_published_arithmetic_anomaly');
+verifyGreaterThan(testCase, ...
+    r.vega.mass_table.max_printed_residual_percentage_points,0.5);
+verifyLessThan(testCase, ...
+    r.vega.mass_table.max_printed_residual_percentage_points,0.8);
+verifyTrue(testCase,r.vega.mass_table.arithmetic_anomaly_mask(3,2));
+verifyLessThan(testCase, ...
+    r.vega.geometry_table.max_printed_residual_percentage_points,0.12);
 
+% Proton: all transcribed Table 6.6/6.7 cells close within printed rounding.
 verifyEqual(testCase,r.proton.mass_table.status,'verified');
-verifyLessThan(testCase,r.proton.mass_table.max_rounding_error_percent,0.12);
-verifyLessThan(testCase,r.proton.geometry_table.max_rounding_error_percent,0.12);
+verifyLessThan(testCase, ...
+    r.proton.mass_table.max_printed_residual_percentage_points,0.12);
+verifyLessThan(testCase, ...
+    r.proton.geometry_table.max_printed_residual_percentage_points,0.12);
 
+% Ariane: Table 6.11 and volumes close; Table 6.12 Stage-1/2 lengths do
+% not follow Eq. 6.1 from the values printed in that same table.
 verifyEqual(testCase,r.ariane5.mass_table.status,'verified');
-verifyLessThan(testCase,r.ariane5.mass_table.max_rounding_error_percent,0.12);
-verifyLessThan(testCase,r.ariane5.geometry_table.max_rounding_error_percent,0.12);
+verifyLessThan(testCase, ...
+    r.ariane5.mass_table.max_printed_residual_percentage_points,0.12);
+verifyEqual(testCase,r.ariane5.geometry_table.status, ...
+    'verified_with_published_arithmetic_anomaly');
+verifyGreaterThan(testCase, ...
+    r.ariane5.geometry_table.max_printed_residual_percentage_points,30);
+verifyTrue(testCase,r.ariane5.geometry_table.arithmetic_anomaly_mask(2));
+verifyTrue(testCase,r.ariane5.geometry_table.arithmetic_anomaly_mask(3));
 end
 
 function testVegaClosurePreservesKnDiscrepancy(testCase)
