@@ -56,11 +56,11 @@ The repository combines research from the 2014 thesis, recovered **unfinished de
 - staged 2D trajectory propagation;
 - independent extended atmosphere reconstruction to 2000 km with Mach/Reynolds/Knudsen diagnostics;
 - thesis Eq. (3.49) Mach-dependent drag coefficient, Appendix A nose-cone geometry, and a 2026 shape-specific modified-Newtonian drag extension;
-- minimum-time TPBVP free-flight solver (`bvp4c`) and experimental Kn=5 hand-off with remaining serial-stage propulsion;
-- documented interstage coast phases and final-stage residual-propellant Delta-V feedback;
+- minimum-time staged TPBVP free-flight solver (`bvp4c`) with Kn=5 hand-off and remaining serial-stage propulsion;
+- documented interstage coast phases, per-stage propellant reserves and final-stage residual-propellant Delta-V feedback;
 - generalized parallel-booster ("zeroth stage") mass/performance sizing, discrete optimization and trajectory coupling;
 - configurable BATES, inhibited-core and end-burner solid-grain ballistics;
-- optional Chapter-5 stage geometry / exterior skin-mass model;
+- Chapter-5 stage geometry / optional exterior skin-mass model, plus explicit fairing/interstage/adapter/wiring geometry;
 - pressure-aware chamber/nozzle model with ambient-pressure thrust;
 - calibrated multi-parameter engine-mass framework using thrust, chamber pressure, area ratio and O/F;
 - trajectory-constraint evaluation for max-q, heat flux, bending and axial acceleration, plus active preliminary throttle response;
@@ -77,14 +77,13 @@ The repository combines research from the 2014 thesis, recovered **unfinished de
 - unified MATLAB GUI plus menu-independent APIs;
 - MATLAB regression tests.
 
-### Original thesis components still being restored
+### Validation / provenance still open
 
 - final end-to-end validation of the modern structural-factor / MER loop against complete thesis launchers;
-- complete fairing/interstage structural geometry beyond the implemented cylindrical stage/skin model;
 - historical Ariane 5 end-to-end closure of the implemented booster trajectory coupling;
 - historical Vega/Proton validation of the implemented Kn=5 phase switch and staged TPBVP free-flight phase;
 - exact recovery of unresolved historical details such as the Proton thrust convention and Ariane 23-point Delta-V path;
-- full thesis-quality `Delta-V` coupling across both serial and parallel staging;
+- quantitative closure of the `Delta-V` feedback against the surviving historical serial/parallel reference cases;
 - complete Vega, Proton K and Ariane 5 end-to-end agreement.
 
 See [`docs/THESIS_MODEL.md`](docs/THESIS_MODEL.md) for the 2014 architecture and [`docs/RECONSTRUCTION.md`](docs/RECONSTRUCTION.md) for the distinction between recovered thesis functionality and later maintenance. The implemented 2026 Future Work extensions and their provenance are documented in [`docs/FUTURE_WORK_EXTENSIONS.md`](docs/FUTURE_WORK_EXTENSIONS.md), with mission/economic/J2 additions in [`docs/MISSION_EXTENSIONS.md`](docs/MISSION_EXTENSIONS.md). The development sequence and the original thesis Future Work are tracked in [`ROADMAP.md`](ROADMAP.md), including which 2026 extensions are AI-assisted.
