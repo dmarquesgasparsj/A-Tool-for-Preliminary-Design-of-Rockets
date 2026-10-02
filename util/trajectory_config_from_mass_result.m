@@ -47,12 +47,18 @@ for i=1:N
         isfinite(source.diameter_m) && source.diameter_m>0;
     has_cda=isfield(source,'CdA_m2') && ...
         isfinite(source.CdA_m2) && source.CdA_m2>0;
+    has_reference_area=isfield(source,'reference_area_m2') && ...
+        isfinite(source.reference_area_m2) && source.reference_area_m2>0;
 
     if strcmp(policy,'auto')
-        if isfield(source,'drag_model') && any(strcmpi(source.drag_model, ...
-                {'shape_specific','shape_specific_modified_newtonian'}))
-            model='shape_specific';
-        elseif has_diameter
+        configured='';
+        if isfield(source,'drag_model') && ~isempty(source.drag_model)
+            configured=lower(char(source.drag_model));
+        end
+        if any(strcmp(configured,{'constant_cda','thesis_mach_polynomial', ...
+                'shape_specific','shape_specific_modified_newtonian'}))
+            model=configured;
+        elseif has_diameter || has_reference_area
             model='thesis_mach_polynomial';
         elseif has_cda
             model='constant_cda';
@@ -68,15 +74,19 @@ for i=1:N
     diameter=NaN;
     if has_diameter
         diameter=source.diameter_m;
+    end
+    if has_reference_area
+        area=source.reference_area_m2;
+    elseif has_diameter
         area=pi*diameter^2/4;
     end
 
     switch model
         case 'thesis_mach_polynomial'
-            if ~has_diameter
+            if ~isfinite(area) || area<=0
                 error('trajectory_config_from_mass_result:MissingAerodynamics', ...
-                    ['Stage %d (%s) needs diameter_m for the thesis ', ...
-                     'Mach-dependent drag model.'],i,source.name);
+                    ['Stage %d (%s) needs reference_area_m2 or diameter_m ', ...
+                     'for the thesis Mach-dependent drag model.'],i,source.name);
             end
             % CdA is retained only as a nominal compatibility value.
             cdA=opts.default_Cd*area;
@@ -103,7 +113,7 @@ for i=1:N
         case 'constant_cda'
             if has_cda
                 cdA=source.CdA_m2;
-            elseif has_diameter
+            elseif isfinite(area) && area>0
                 Cd=opts.default_Cd;
                 if isfield(source,'Cd_ref') && ...
                         isfinite(source.Cd_ref) && source.Cd_ref>0
@@ -112,8 +122,8 @@ for i=1:N
                 cdA=Cd*area;
             else
                 error('trajectory_config_from_mass_result:MissingAerodynamics', ...
-                    ['Stage %d (%s) requires CdA_m2 or a positive ', ...
-                     'diameter_m.'],i,source.name);
+                    ['Stage %d (%s) requires CdA_m2, reference_area_m2 ', ...
+                     'or a positive diameter_m.'],i,source.name);
             end
 
         otherwise
