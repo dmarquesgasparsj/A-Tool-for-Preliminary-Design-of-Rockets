@@ -151,3 +151,24 @@ Implementation: `util/constraint_aware_throttle.m`, integrated by `equations_of_
 When stage limits are configured, the modern ascent model can respond during integration rather than only flag violations after the flight. Axial acceleration produces an instantaneous thrust ceiling; q, heat-flux and preliminary bending limits produce soft-limit throttle commands. Stage burnout is detected from remaining propellant mass, so reduced throttle correctly lengthens burn duration.
 
 This control law is intended for preliminary design sensitivity studies, not operational guidance certification.
+
+
+## 9. Fairing, interstage, adapter and wiring components
+
+Implementation: `util/estimate_secondary_structure.m`.
+
+The fairing can use the original thesis Eq. (4.16) from its Appendix-A surface geometry. For interstages, the thesis explicitly states that the Akin model had no dedicated MER and that interstage mass could be included in the lower-stage structural mass. The 2026 extension therefore does **not** invent a historical coefficient: interstage and payload-adapter mass use explicit frustum geometry plus user-supplied areal density or material density/thickness. Wiring likewise requires an explicit linear-density calibration.
+
+This structure is compatible with a future external component database while keeping empirical data separate from equations.
+
+## 10. Per-stage propellant reserve and dry-mass margins
+
+Implementations:
+
+- `util/stage_mass_with_reserve.m`
+- `util/thesis_iterative_mass_model.m`
+- `util/modern_stage_mer.m`
+
+The reserve model solves the rocket equation analytically with a defined fraction of stage propellant remaining at burnout, rather than simply multiplying the final mass after sizing. A zero reserve reduces exactly to the historical thesis stage equation. The trajectory adapters convert reserve propellant into non-burned carried mass, so the mass closes consistently through burnout and separation.
+
+An optional dry-mass margin is applied transparently to the sum of modeled dry components. Both margins default to zero and must be explicitly configured.
