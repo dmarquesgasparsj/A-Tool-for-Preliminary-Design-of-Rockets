@@ -1,6 +1,6 @@
 # Future Work Extensions Implemented in 2026
 
-This document records the implementation of four items proposed in the 2014 thesis Future Work. It deliberately distinguishes thesis-derived equations from new 2026 modelling choices.
+This document records the implementation of the propulsion, aerodynamics, trajectory-constraint and booster items proposed in the 2014 thesis Future Work. It deliberately distinguishes thesis-derived equations from new 2026 modelling choices.
 
 ## 1. Stage geometry and exterior skin mass
 
@@ -75,7 +75,7 @@ and `M = N * lever_arm`. Angle of attack and lever arm are explicit inputs rathe
 
 Axial load is reported as `(T-D)/(m*g0)`. This is a structural specific-force diagnostic, not the inertial flight-path acceleration.
 
-Current constraints are evaluators: they reject/flag a configuration but do not yet command throttle or alter guidance automatically.
+Constraint histories remain independently evaluable. In addition, the modern ascent path can use `constraint_aware_throttle.m` to reduce thrust near configured q/heating/bending/axial limits. This is transparent preliminary control logic, not flight-certified GNC.
 
 ## 4. Parallel-booster trajectory coupling
 
@@ -107,3 +107,47 @@ These features are **implemented**, but implementation and validation are distin
 - booster trajectory: mass closure and atmospheric coupling regression-tested; Ariane 5 historical end-to-end agreement remains a validation target.
 
 No coefficient is tuned merely to reproduce a historical result.
+
+
+## 5. Calibrated multi-parameter engine mass
+
+Implementation: `util/estimate_engine_mass.m`.
+
+The recovered thesis MER remains available unchanged. A new reference-engine power-law option can scale engine mass with thrust, chamber pressure, nozzle area ratio and mixture ratio. The model intentionally contains **no hidden universal exponents**: reference values and exponents must be supplied from an identified calibration dataset.
+
+This closes the software capability requested by the thesis Future Work without presenting an arbitrary correlation as a physical law.
+
+## 6. Shape-specific nose-cone drag
+
+Implementations:
+
+- `util/thesis_nose_cone_geometry.m`
+- `util/nose_cone_drag_coefficient.m`
+- `util/aerodynamic_drag.m`
+
+The Appendix-A ogive, power, ellipse and Haack profiles now feed a modified-Newtonian forebody pressure model at high Mach number. Because modified Newtonian theory is a hypersonic approximation, the implementation smoothly blends from the thesis-wide `Cd(Mach)` fit between configurable Mach limits. Viscous, base and clustered-body interference drag remain explicit higher-fidelity additions rather than hidden corrections.
+
+The historical thesis drag law is preserved as a separate option for regression.
+
+## 7. Solid-propellant grain geometry
+
+Implementation: `util/solid_grain_ballistics.m`.
+
+The generalized solid-motor extension supports:
+
+- inhibited cylindrical-core grains;
+- BATES grains;
+- end-burning grains;
+- arbitrary density and Saint-Robert burn-law coefficients;
+- quasi-steady chamber-pressure solution from burn area and throat area;
+- optional pressure-aware nozzle thrust history.
+
+This is a conceptual internal-ballistics model. Combustion instability, erosive burning, cracks, ignition transients and structural grain stress are outside its fidelity.
+
+## 8. Active constraint response
+
+Implementation: `util/constraint_aware_throttle.m`, integrated by `equations_of_motion.m` and `simulate_gravity_turn.m`.
+
+When stage limits are configured, the modern ascent model can respond during integration rather than only flag violations after the flight. Axial acceleration produces an instantaneous thrust ceiling; q, heat-flux and preliminary bending limits produce soft-limit throttle commands. Stage burnout is detected from remaining propellant mass, so reduced throttle correctly lengthens burn duration.
+
+This control law is intended for preliminary design sensitivity studies, not operational guidance certification.
