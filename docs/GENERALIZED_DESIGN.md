@@ -17,7 +17,7 @@ run_thesis_sizing(mission,stages) -> thesis_iterative_mass_model.m
                                         +-- thesis_mer_components.m
 ```
 
-`main()` now offers three explicit paths: the experimental integrated mass+trajectory loop, mass-only sizing, and the earlier simplified trajectory demonstration. The existing `main(payload_kg, orbit_altitude_km)` and `run_design()` APIs remain available for compatibility.
+`main()` now offers the unified graphical app plus dedicated integrated, mass-only, booster, mission-extension and compatibility paths. The existing `main(payload_kg, orbit_altitude_km)` and `run_design()` APIs remain available.
 
 The interactive menu is optional. The entire mass calculation can be run from a script or test without windows, global variables or hard-coded filenames.
 
@@ -104,13 +104,13 @@ The Ariane 5 Chapter 6 benchmark is mapped through `ariane5_2014_parallel_config
 
 `run_integrated_design()` couples the generalized mass model to the current 2D gravity-turn propagator. Each iteration resizes the launcher, propagates the ascent, integrates drag and gravity losses, and updates the total Delta-V budget. The default Delta-V convergence tolerance is 0.01%, matching the value stated in the thesis.
 
-This is an architectural integration milestone, not yet a full reproduction of the thesis trajectory. A dedicated three-phase solver now propagates the powered atmospheric ascent to an exact **Kn = 5** event and hands the live state, active stage, and remaining propellant to the restored TPBVP free-flight solver. This path is still experimental until the historical Vega and Proton trajectory cases are reproduced. The result therefore reports separately whether the Delta-V loop converged and whether the simulated trajectory actually met the requested circular-orbit tolerances.
+The generalized Delta-V feedback path and the historical three-phase reconstruction are deliberately separate. The latter propagates to the exact **Kn = 5** event and hands the live state, active stage and remaining propellant to the staged TPBVP solver. Historical Vega/Proton disagreements are treated as validation/provenance findings rather than missing software. Results continue to report Delta-V convergence and orbit attainment separately.
 
-The trajectory adapter now defaults to the thesis Eq. (3.49) Mach-dependent `Cd` whenever stage diameter is available. Explicit constant `Cd*A` remains supported for older configurations. Appendix A nose-cone geometries are implemented as geometry utilities, but the 2014 thesis did not provide shape-specific drag correlations; those remain Future Work.
+The trajectory adapter retains the thesis Eq. (3.49) Mach-dependent `Cd` as the historical default. Explicit constant `Cd*A` remains supported. A 2026 `shape_specific` option now uses Appendix-A nose profiles with a modified-Newtonian high-Mach pressure-drag model blended with the thesis law.
 
 ## What this does *not* yet calculate
 
-This is a **generalized serial-stage preliminary design model**, not yet a complete launcher optimizer. It currently does not calculate:
+This is a **preliminary-design** tool. Implemented capabilities are intentionally separated from higher-fidelity analyses that remain outside scope. It does not claim:
 
 - full trajectory coupling for parallel boosters/overlapping burns (mass/performance sizing is implemented);
 - historical closure of the Kn=5 -> staged TPBVP trajectory against Vega and Proton K;
