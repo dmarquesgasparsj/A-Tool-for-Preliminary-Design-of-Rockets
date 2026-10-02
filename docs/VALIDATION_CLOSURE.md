@@ -32,7 +32,9 @@ The stage propellant/structural deviations and the Table 6.5 length/volume devia
 
 There is one explicit Table 6.4 convention ambiguity in the final AVUM `m0` cell. The printed component masses imply **692.2 kg** before payload; adding the 1,500 kg payload gives **2,192.2 kg**. The printed **11.8%** deviation is consistent with the no-payload convention. Both values are preserved and the ambiguous cell is excluded from the automatic table-rounding assertion.
 
-**Classification: verified source transcription, with two structural arithmetic/transcription anomalies and one documented Stage-4 `m0` convention ambiguity.**
+The reference Table 6.1 component masses also expose a separate accounting gap: they sum to **133,280 kg excluding payload** and **134,780 kg including the 1,500 kg payload**, whereas Table 6.4 uses **132,530 kg** as its reference GLOW. The simulated component masses similarly do not sum to the printed 126,085 kg GLOW. No unprinted balancing mass is invented.
+
+**Classification: verified source transcription, with published arithmetic/accounting anomalies and one documented Stage-4 `m0` convention ambiguity.**
 
 ### Atmospheric trajectory
 
@@ -74,7 +76,9 @@ Chapter 6 Table 6.6 reports:
 
 Eq. (6.1) gives approximately **6.28%**, explaining both rounded presentations. The stage mass and Table 6.7 geometry deviations are reproduced by the executable validation fixture.
 
-**Classification: verified.**
+The Table 6.6 mass accounting itself is coherent under a specific convention: the first-section reference mass **668,577 kg** is exactly the sum of the three active stages. The stated 19,360 kg mission payload and the passive DM-3 wet mass are not included in that table's mass-comparison total. This convention difference is important when interpreting trajectory initial mass.
+
+**Classification: verified under the active-three-stage Table 6.6 convention.**
 
 ### Literal trajectory contradiction
 
@@ -119,7 +123,7 @@ The thesis reports:
 - total flight time: **462.8 s**;
 - end of gravity turn: **111.5 s**, **120.4 km**, gamma **58.9 deg**.
 
-Tables 6.11 and 6.12 are machine-readable. Table 6.11 mass deviations and Table 6.12 volume deviations reproduce Eq. (6.1) within printed rounding. Two Table 6.12 length cells do not: using the printed reference/simulated lengths gives about 78.49% for Stage 1 and 57.75% for Stage 2, while the table prints 44% and 36.6%, respectively. These are preserved as published table anomalies.
+Tables 6.11 and 6.12 are machine-readable. Table 6.11 mass deviations and Table 6.12 volume deviations reproduce Eq. (6.1) within printed rounding. The Table 6.11 vehicle masses also close on the listed launcher components themselves; the 19.3 t mission payload is not added to those reported vehicle-mass totals. Two Table 6.12 length cells do not: using the printed reference/simulated lengths gives about 78.49% for Stage 1 and 57.75% for Stage 2, while the table prints 44% and 36.6%, respectively. These are preserved as published table anomalies.
 
 ### Unrecoverable optimization path
 
