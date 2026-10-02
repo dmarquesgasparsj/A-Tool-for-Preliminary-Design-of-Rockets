@@ -26,7 +26,7 @@ ref.reported.table6_6_simulated_glow_kg=626563;
 ref.reported.table6_6_simulated_mp_kg=[395390 142878 34127];
 ref.reported.table6_6_simulated_ms_kg=[36563 12323 5282];
 ref.reported.table6_6_simulated_m0_kg=[626563 194610 39409];
-ref.reported.table6_6_deviation_percent=[ ...
+ref.reported.table6_6_stage_deviation_percent=[ ...
     5.7 19.5 6.3; 8.5 5.2 11; 26.7 26.2 22.3];
 
 ref.reported.table6_7_reference_diameter_m=[7.4 4.1 4.1];
