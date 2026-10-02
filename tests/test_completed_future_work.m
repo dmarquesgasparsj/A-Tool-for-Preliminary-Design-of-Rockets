@@ -51,7 +51,7 @@ M=[0.8 5];
 verifyEqual(testCase,c1(1),thesis_cd_mach(M(1)),'RelTol',1e-12);
 verifyGreaterThan(testCase,c1(2),0);
 verifyGreaterThan(testCase,c2(2),0);
-verifyNotEqual(testCase,c1(2),c2(2),'AbsTol',1e-5);
+verifyGreaterThan(testCase,abs(c1(2)-c2(2)),1e-5);
 verifyEqual(testCase,d1.blend_weight(2),1,'AbsTol',1e-12);
 end
 
