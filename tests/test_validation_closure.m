@@ -1,0 +1,133 @@
+function tests = test_validation_closure
+tests=functiontests(localfunctions);
+end
+
+function setupOnce(~)
+root=fileparts(fileparts(mfilename('fullpath')));
+addpath(root);
+addpath(fullfile(root,'validation'));
+addpath(fullfile(root,'util'));
+addpath(fullfile(root,'configs'));
+end
+
+function testHistoricalDeviationMetric(testCase)
+r=historical_percent_deviation([100 200],[90 250]);
+verifyEqual(testCase,r,[10 25],'AbsTol',1e-12);
+verifyTrue(testCase,isnan(historical_percent_deviation(0,1)));
+end
+
+function testChapter6TablesAndPublishedAnomalies(testCase)
+r=run_validation_closure(struct( ...
+    'run_full_trajectory',false,'run_ariane_trajectory',false));
+
+% Vega: geometry and nearly all mass cells reproduce Eq. 6.1, but the
+% printed Stage-3 structural deviation is inconsistent with 833/906.2 kg.
+verifyEqual(testCase,r.vega.mass_table.status, ...
+    'verified_with_published_arithmetic_anomaly');
+verifyGreaterThan(testCase, ...
+    r.vega.mass_table.max_printed_residual_percentage_points,0.5);
+verifyLessThan(testCase, ...
+    r.vega.mass_table.max_printed_residual_percentage_points,0.8);
+verifyTrue(testCase,r.vega.mass_table.arithmetic_anomaly_mask(3,2));
+verifyTrue(testCase,r.vega.mass_table.arithmetic_anomaly_mask(4,2));
+verifyLessThan(testCase, ...
+    r.vega.geometry_table.max_printed_residual_percentage_points,0.12);
+
+% Proton: all transcribed Table 6.6/6.7 cells close within printed rounding.
+verifyEqual(testCase,r.proton.mass_table.status,'verified');
+verifyLessThan(testCase, ...
+    r.proton.mass_table.max_printed_residual_percentage_points,0.12);
+verifyLessThan(testCase, ...
+    r.proton.geometry_table.max_printed_residual_percentage_points,0.12);
+
+% Ariane: Table 6.11 and volumes close; Table 6.12 Stage-1/2 lengths do
+% not follow Eq. 6.1 from the values printed in that same table.
+verifyEqual(testCase,r.ariane5.mass_table.status,'verified');
+verifyLessThan(testCase, ...
+    r.ariane5.mass_table.max_printed_residual_percentage_points,0.12);
+verifyEqual(testCase,r.ariane5.geometry_table.status, ...
+    'verified_with_published_arithmetic_anomaly');
+verifyGreaterThan(testCase, ...
+    r.ariane5.geometry_table.max_printed_residual_percentage_points,30);
+verifyTrue(testCase,r.ariane5.geometry_table.arithmetic_anomaly_mask(2));
+verifyTrue(testCase,r.ariane5.geometry_table.arithmetic_anomaly_mask(3));
+end
+
+function testChapter6MassAccountingConventions(testCase)
+r=run_validation_closure(struct( ...
+    'run_full_trajectory',false,'run_ariane_trajectory',false));
+
+% Vega's printed Chapter-6 component masses do not close to the Table 6.4
+% GLOW convention. Preserve the discrepancy instead of inventing a mass.
+verifyEqual(testCase, ...
+    r.vega.mass_accounting.reference_component_sum_excluding_payload_kg, ...
+    133280,'AbsTol',1e-9);
+verifyEqual(testCase, ...
+    r.vega.mass_accounting.reference_component_sum_including_payload_kg, ...
+    134780,'AbsTol',1e-9);
+verifyEqual(testCase, ...
+    r.vega.mass_accounting.reference_gap_to_table6_4_glow_kg, ...
+    750,'AbsTol',1e-9);
+verifyEqual(testCase,r.vega.mass_accounting.status,'provenance_gap');
+
+% Proton Table 6.6 closes on the active 3-stage stack only.
+verifyEqual(testCase, ...
+    r.proton.mass_accounting.reference_gap_to_table6_6_glow_kg,0, ...
+    'AbsTol',1e-9);
+verifyEqual(testCase, ...
+    r.proton.mass_accounting.simulated_gap_to_table6_6_glow_kg,0, ...
+    'AbsTol',1e-9);
+
+% Ariane Table 6.11 likewise closes on vehicle components, excluding payload.
+verifyEqual(testCase, ...
+    r.ariane5.mass_accounting.reference_gap_to_table6_11_vehicle_mass_kg,0, ...
+    'AbsTol',1e-9);
+verifyLessThan(testCase,abs( ...
+    r.ariane5.mass_accounting.simulated_gap_to_table6_11_vehicle_mass_kg), ...
+    0.2);
+end
+
+function testVegaClosurePreservesKnDiscrepancy(testCase)
+r=run_validation_closure(struct( ...
+    'run_full_trajectory',false,'run_ariane_trajectory',false));
+verifyTrue(testCase,r.vega.trajectory.thesis_fixture.kn_detected);
+verifyGreaterThan(testCase,r.vega.trajectory.thesis_fixture.kn_time_s, ...
+    r.vega.reference.reported.gravity_turn_end_time_s);
+verifyGreaterThan(testCase,r.vega.trajectory.thesis_fixture.max_q_altitude_m,7e3);
+verifyLessThan(testCase,r.vega.trajectory.thesis_fixture.max_q_altitude_m,12e3);
+verifyEqual(testCase,r.vega.closure_status,'closed_provenance_gap');
+end
+
+function testProtonClosureMakesLiteralLiftOffContradictionExplicit(testCase)
+r=run_validation_closure(struct( ...
+    'run_full_trajectory',false,'run_ariane_trajectory',false));
+verifyLessThan(testCase,r.proton.trajectory.thesis_semantic.liftoff_TW,1);
+verifyFalse(testCase,r.proton.trajectory.thesis_semantic.kn_detected);
+verifyGreaterThan(testCase, ...
+    r.proton.trajectory.recovered_development.liftoff_TW,1);
+verifyTrue(testCase, ...
+    r.proton.trajectory.recovered_development.kn_detected);
+verifyEqual(testCase,r.proton.closure_status,'closed_provenance_gap');
+end
+
+function testArianeClosureDoesNotInventMissingSearchPath(testCase)
+r=run_validation_closure(struct( ...
+    'run_full_trajectory',false,'run_ariane_trajectory',false));
+verifyEqual(testCase,r.ariane5.design_space.reported_total_simulations,170);
+verifyEqual(testCase,r.ariane5.design_space.delta_v_reported_points,23);
+verifyFalse(testCase,r.ariane5.design_space.exact_delta_v_sequence_available);
+verifyEqual(testCase,r.ariane5.design_space.status,'provenance_gap');
+verifyTrue(testCase,r.validation_closure_complete);
+end
+
+function testFullClosureDiagnostic(testCase)
+opts=struct('run_full_trajectory',true, ...
+    'run_ariane_trajectory',true,'print_summary',true);
+r=run_validation_closure(opts);
+verifyTrue(testCase,r.validation_closure_complete);
+verifyTrue(testCase,r.vega.trajectory.full.transition_detected);
+verifyTrue(testCase,isfield(r.proton.trajectory.full,'status'));
+verifyTrue(testCase,isfield(r.ariane5.trajectory,'status'));
+% Historical discrepancies are findings, not CI failures.
+verifyEqual(testCase,r.overall_status,'closed_with_documented_provenance_gaps');
+end

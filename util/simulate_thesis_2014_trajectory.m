@@ -8,9 +8,10 @@ function result = simulate_thesis_2014_trajectory(cfg,mass_result,opts)
 %   -> staged minimum-time free-flight TPBVP
 %   -> circular-orbit target.
 %
-% It is a reconstruction bridge, not yet final validation of Vega/Proton.
-% The atmospheric phase follows thesis equations and the free-flight phase
-% uses the restored bvp4c PMP formulation. Coast phases are not yet inserted.
+% It is a reconstruction bridge whose historical validation outcome is
+% classified by run_validation_closure(). The atmospheric phase follows
+% thesis equations, the free-flight phase uses the restored bvp4c PMP
+% formulation, and documented coast phases are inserted by the scheduler.
 
 if nargin<3 || isempty(opts), opts=struct(); end
 if ~isfield(opts,'trajectory_config'), opts.trajectory_config=struct(); end
@@ -98,5 +99,5 @@ result.status='Atmospheric Knudsen phase and staged free-flight TPBVP completed.
 result.model_status=[ ...
     '2014 trajectory reconstruction: vertical ascent + gravity turn + ', ...
     'Knudsen transition + documented coast phases + minimum-time staged ', ...
-    'TPBVP. End-to-end historical validation remains pending.'];
+    'TPBVP. Historical agreement/non-agreement is classified by the v0.9 validation closure.'];
 end

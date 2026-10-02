@@ -68,6 +68,8 @@ ref.optimum.masses.upper_mp_kg=2217;
 ref.optimum.masses.upper_ms_kg=4313;
 ref.optimum.reported_vehicle_mass_kg=680076.5;
 ref.original.reported_vehicle_mass_kg=764140;
+ref.original.table6_11_m0_kg=[764140 204140 19440];
+ref.optimum.table6_11_simulated_m0_kg=[680076.5 144671.1 6530];
 ref.optimum.reported_mass_reduction_kg= ...
     ref.original.reported_vehicle_mass_kg-ref.optimum.reported_vehicle_mass_kg;
 ref.optimum.reported_GLOW_reduction_percent=11;
@@ -76,6 +78,17 @@ ref.optimum.flight_time_s=462.8;
 ref.optimum.gravity_turn_end_time_s=111.5;
 ref.optimum.gravity_turn_end_altitude_m=120.4e3;
 ref.optimum.gravity_turn_end_gamma_deg=58.9;
+ref.optimum.table6_11_deviation_percent=[ ...
+    4.5 3.5 11; 27.2 2 29.1; 85.1 5 66.4];
+
+ref.original.dimensions.diameter_m=[3.05 5.4 5.4];
+ref.original.dimensions.length_m=[31.6 30.5 4.71];
+ref.original.dimensions.volume_m3=[230.75 698.16 107.81];
+ref.optimum.dimensions.diameter_m=[2.62 3.9 3.9];
+ref.optimum.dimensions.length_m=[36.99 54.44 7.43];
+ref.optimum.dimensions.volume_m3=[199.37 638.16 88.73];
+ref.optimum.table6_12_deviation_percent=[ ...
+    14.1 17.1 13.6; 27.8 44 8.6; 27.8 36.6 17.7];
 ref.optimum.coast_time_s=3;
 
 ref.provenance_notes={ ...

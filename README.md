@@ -77,14 +77,18 @@ The repository combines research from the 2014 thesis, recovered **unfinished de
 - unified MATLAB GUI plus menu-independent APIs;
 - MATLAB regression tests.
 
-### Validation / provenance still open
+### Historical validation closure
 
-- final end-to-end validation of the modern structural-factor / MER loop against complete thesis launchers;
-- historical Ariane 5 end-to-end closure of the implemented booster trajectory coupling;
-- historical Vega/Proton validation of the implemented Kn=5 phase switch and staged TPBVP free-flight phase;
-- exact recovery of unresolved historical details such as the Proton thrust convention and Ariane 23-point Delta-V path;
-- quantitative closure of the `Delta-V` feedback against the surviving historical serial/parallel reference cases;
-- complete Vega, Proton K and Ariane 5 end-to-end agreement.
+Historical Vega/Proton/Ariane validation is **closed as a reproducible forensic report**, not by forcing end-to-end agreement. Chapter 6 tables, Eq. (6.1), atmospheric landmarks and reconstructed trajectory outcomes are machine-checkable. Remaining differences are classified as published-table anomalies, non-reproductions or provenance gaps.
+
+Key closed findings include the Vega Kn=5 timing/reserve disagreement, the literal Proton Table 6.2 lift-off contradiction, the different recovered Proton development convention, the Ariane TPBVP non-reproduction, and the unavailable exact Ariane 23-point Delta-V search path. New source evidence can refine these classifications without rewriting them by parameter tuning.
+
+See [`docs/VALIDATION_CLOSURE.md`](docs/VALIDATION_CLOSURE.md). To run the executable report:
+
+```matlab
+addpath('validation','util','configs')
+report = run_validation_closure(struct('print_summary',true));
+```
 
 See [`docs/THESIS_MODEL.md`](docs/THESIS_MODEL.md) for the 2014 architecture and [`docs/RECONSTRUCTION.md`](docs/RECONSTRUCTION.md) for the distinction between recovered thesis functionality and later maintenance. The implemented 2026 Future Work extensions and their provenance are documented in [`docs/FUTURE_WORK_EXTENSIONS.md`](docs/FUTURE_WORK_EXTENSIONS.md), with mission/economic/J2 additions in [`docs/MISSION_EXTENSIONS.md`](docs/MISSION_EXTENSIONS.md). The development sequence and the original thesis Future Work are tracked in [`ROADMAP.md`](ROADMAP.md), including which 2026 extensions are AI-assisted.
 
@@ -103,7 +107,7 @@ cfg = general_launcher_preset('illustrative_two_stage');
 result = run_integrated_design(cfg);
 ```
 
-For custom serial missions, use `make_launcher_config(mission, stages)` with either `run_integrated_design(mission, stages)` or `run_thesis_sizing(mission, stages)`. For parallel boosters, build the documented booster configuration struct and call `run_parallel_booster_sizing(cfg)`; `ariane5_2014_parallel_config('reported_optimum')` is an example. Booster trajectory coupling is implemented; historical Ariane end-to-end closure remains a validation/provenance milestone.
+For custom serial missions, use `make_launcher_config(mission, stages)` with either `run_integrated_design(mission, stages)` or `run_thesis_sizing(mission, stages)`. For parallel boosters, build the documented booster configuration struct and call `run_parallel_booster_sizing(cfg)`; `ariane5_2014_parallel_config('reported_optimum')` is an example. Booster trajectory coupling is implemented; its Chapter 6 end-to-end non-reproduction and provenance limits are recorded in the validation closure.
 
 The earlier simplified trajectory demonstration remains accessible from the *Existing trajectory demo* option in `main` or programmatically:
 
@@ -122,7 +126,7 @@ results = runtests('tests');
 table(results)
 ```
 
-As the original model is restored, the historical Vega, Proton K and Ariane 5 results will become end-to-end regression tests.
+Historical Vega, Proton K and Ariane 5 results are regression-tested as explicit reproductions, non-reproductions or provenance gaps; disagreement with an unrecoverable historical result is not hidden by coefficient tuning.
 
 ## Repository layout
 

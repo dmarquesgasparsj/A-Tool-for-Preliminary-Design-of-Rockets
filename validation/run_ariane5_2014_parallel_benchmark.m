@@ -5,9 +5,9 @@ function report = run_ariane5_2014_parallel_benchmark(opts)
 % Table 6.10 optimum using the same generalized 2026 booster model. It does
 % not tune coefficients to make either point match Table 6.11.
 %
-% The result is deliberately diagnostic: discrepancies identify modelling
-% work still required (geometry/skin mass, exact historic booster MER,
-% trajectory-loss feedback, and the lost 23-point Delta-V search path).
+% The result is deliberately diagnostic. It is consumed by the v0.9
+% validation closure, which separates modern comparison values from the
+% unrecoverable 23-point historical Delta-V search path.
 
 if nargin<1 || isempty(opts), opts=struct(); end
 if ~isfield(opts,'delta_v_match_tolerance_m_s')
@@ -59,7 +59,7 @@ else
 end
 
 report.status=[ ...
-    'Ariane 5 benchmark scaffold active. Results are comparison data, ', ...
-    'not a reproduction claim until booster/geometry/trajectory validation ', ...
-    'matches Chapter 6 independently.'];
+    'Ariane 5 generalized benchmark. Results are 2026 comparison data; ', ...
+    'Chapter 6 historical agreement/non-agreement is classified by ', ...
+    'run_validation_closure and is not forced by coefficient tuning.'];
 end

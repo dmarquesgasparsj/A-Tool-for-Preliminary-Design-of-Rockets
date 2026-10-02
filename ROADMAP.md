@@ -77,8 +77,8 @@ Inclined/air launch, cost CER framework, GEO/interplanetary preliminary analysis
 ### v0.8 — Higher-fidelity dynamics
 Thrust misalignment, pointing-error Monte Carlo, Earth J2 and Sun/Moon third-body gravity are implemented, with an interface for external ephemerides.
 
-### v0.9 — Validation closure
-Focus exclusively on reproducible Vega, Proton K and Ariane 5 validation reports, uncertainty/sensitivity analysis, benchmark datasets and documentation consistency.
+### v0.9 — Validation closure — **complete**
+Chapter 6 Vega, Proton K and Ariane 5 targets are machine-readable and covered by `run_validation_closure.m`. Eq. (6.1) is re-evaluated cell-by-cell: matching values, published arithmetic anomalies and trajectory provenance gaps are all classified explicitly rather than tuned away. See [VALIDATION_CLOSURE.md](docs/VALIDATION_CLOSURE.md).
 
 ### v1.0 — Validated open design tool
 Stable API/GUI, documented fidelity limits, reproducible reference cases and performance profiling. Selective native-code acceleration only if measured benchmarks justify it.

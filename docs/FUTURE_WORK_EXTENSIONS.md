@@ -99,12 +99,12 @@ Implementations:
 
 ## Validation status
 
-These features are **implemented**, but implementation and validation are distinct milestones.
+These features are **implemented**, but historical reconstruction and modern engineering validation are distinct questions.
 
 - geometry/skin: equation regression-tested; historical 33 mm input remains a modelling caveat;
-- pressure nozzle: equation and sea-level/vacuum behaviour regression-tested; engine-specific validation remains;
-- constraints: histories and pass/fail logic regression-tested; active guidance/throttle response remains;
-- booster trajectory: mass closure and atmospheric coupling regression-tested; Ariane 5 historical end-to-end agreement remains a validation target.
+- pressure nozzle: equation and sea-level/vacuum behaviour regression-tested; engine-specific external calibration remains a modern validation task;
+- constraints: histories, pass/fail logic and preliminary active throttle response are regression-tested;
+- booster trajectory: mass closure and atmospheric coupling are regression-tested; the Ariane Chapter 6 end-to-end disagreement is now classified in [VALIDATION_CLOSURE.md](VALIDATION_CLOSURE.md), rather than left as an open historical target.
 
 No coefficient is tuned merely to reproduce a historical result.
 
