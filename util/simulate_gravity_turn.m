@@ -49,45 +49,62 @@ stage_events = repmat(struct('name','','t_start',0,'t_burnout',0, ...
 ode_opts = odeset('RelTol',1e-7,'AbsTol',1e-8);
 
 for i = 1:N
-    st = stages(i);
-    mdot = st.thrust_N / (st.Isp_s * env.g0);
-    tburn = st.mp_kg / mdot;
-    m_start = state(5);
-    m_end_burn = m_start - st.mp_kg;
+    st=stages(i);
+    nominal_mdot=st.thrust_N/(st.Isp_s*env.g0);
+    nominal_tburn=st.mp_kg/nominal_mdot;
+    m_start=state(5);
+    m_end_burn=m_start-st.mp_kg;
 
-    eom = @(t, x) equations_of_motion(t, x, env, st, ufun);
-    [t_seg, x_seg] = ode45(eom, [t0, t0 + tburn], state, ode_opts);
-
-    % Numerical integration of mass is theoretically identical to the
-    % analytical burn value. Pin the final sample to prevent drift.
-    x_seg(end,5) = m_end_burn;
-
-    % Avoid duplicate boundary sample when concatenating stages.
-    if i > 1
-        t_seg = t_seg(2:end);
-        x_seg = x_seg(2:end,:);
+    % Integrate to propellant depletion rather than assuming constant
+    % nominal thrust. This preserves exact behaviour for legacy constant
+    % thrust while allowing pressure-aware and constraint-throttled stages.
+    min_throttle=0.2;
+    if isfield(st,'constraint_control') && isstruct(st.constraint_control) && ...
+            isfield(st.constraint_control,'min_throttle')
+        min_throttle=max(0.01,st.constraint_control.min_throttle);
+    elseif isfield(st,'throttle') && isnumeric(st.throttle) && isscalar(st.throttle)
+        min_throttle=max(0.01,st.throttle);
     end
+    max_duration=2*nominal_tburn/min_throttle;
+    eom=@(t,x) equations_of_motion(t,x,env,st,ufun);
+    stage_opts=odeset(ode_opts,'Events', ...
+        @(t,x) burnout_event(t,x,m_end_burn));
+    [t_seg,x_seg,te,xe]=ode45(eom,[t0,t0+max_duration],state,stage_opts);
+    if isempty(te) && x_seg(end,5)>m_end_burn+max(1e-6,1e-9*m_start)
+        error('simulate_gravity_turn:BurnoutNotReached', ...
+            'Stage %d did not consume its propellant within the burn horizon.',i);
+    end
+    if ~isempty(xe)
+        x_seg(end,:)=xe(end,:);
+        t_seg(end)=te(end);
+    end
+    x_seg(end,5)=m_end_burn;
+    tburn=t_seg(end)-t0;
 
-    t_hist = [t_hist; t_seg]; %#ok<AGROW>
-    x_hist = [x_hist; x_seg]; %#ok<AGROW>
-    stage_index_hist = [stage_index_hist; repmat(i, numel(t_seg), 1)]; %#ok<AGROW>
+    if i>1
+        t_seg=t_seg(2:end);
+        x_seg=x_seg(2:end,:);
+    end
+    t_hist=[t_hist;t_seg]; %#ok<AGROW>
+    x_hist=[x_hist;x_seg]; %#ok<AGROW>
+    stage_index_hist=[stage_index_hist;repmat(i,numel(t_seg),1)]; %#ok<AGROW>
 
-    if i < N
-        m_after_sep = m_end_burn - st.ms_kg;
+    if i<N
+        m_after_sep=m_end_burn-st.ms_kg;
     else
-        m_after_sep = m_end_burn;
+        m_after_sep=m_end_burn;
     end
 
-    stage_events(i).name = st.name;
-    stage_events(i).t_start = t0;
-    stage_events(i).t_burnout = t0 + tburn;
-    stage_events(i).mass_start_kg = m_start;
-    stage_events(i).mass_burnout_kg = m_end_burn;
-    stage_events(i).mass_after_sep_kg = m_after_sep;
+    stage_events(i).name=st.name;
+    stage_events(i).t_start=t0;
+    stage_events(i).t_burnout=t0+tburn;
+    stage_events(i).mass_start_kg=m_start;
+    stage_events(i).mass_burnout_kg=m_end_burn;
+    stage_events(i).mass_after_sep_kg=m_after_sep;
 
-    state = x_seg(end,:)';
-    state(5) = m_after_sep;
-    t0 = t0 + tburn;
+    state=x_seg(end,:)';
+    state(5)=m_after_sep;
+    t0=t0+tburn;
 end
 
 r = x_hist(:,1);
@@ -201,4 +218,39 @@ traj.loss_history.total_m_s = drag_cumulative + gravity_cumulative;
 traj.traj_params = traj_params;
 traj.initial_conditions = init;
 traj.guidance = guidance_meta;
+
+% Reconstruct throttle/thrust histories for diagnostics.
+traj.throttle=ones(size(t_hist));
+traj.thrust_N=zeros(size(t_hist));
+for j=1:numel(t_hist)
+    st=stages(stage_index_hist(j));
+    aero=aerodynamic_drag(st,max(0,h(j)),air_speed_hist(j));
+    [Tnom,~]=stage_thrust_at_ambient(st,aero.pressure_Pa);
+    cmd=1;
+    if isfield(st,'throttle') && ~isempty(st.throttle)
+        if isa(st.throttle,'function_handle')
+            cmd=st.throttle(t_hist(j),x_hist(j,:)');
+        else
+            cmd=st.throttle;
+        end
+    end
+    if isfield(st,'constraint_limits') && isstruct(st.constraint_limits) && ...
+            ~isempty(fieldnames(st.constraint_limits))
+        ctrl=struct();
+        if isfield(st,'constraint_control') && isstruct(st.constraint_control)
+            ctrl=st.constraint_control;
+        end
+        [uc,~]=constraint_aware_throttle(aero,x_hist(j,:)',st,env, ...
+            st.constraint_limits,ctrl);
+        cmd=min(cmd,uc);
+    end
+    traj.throttle(j)=cmd;
+    traj.thrust_N(j)=Tnom*cmd;
+end
+end
+
+function [value,isterminal,direction]=burnout_event(~,x,target_mass)
+value=x(5)-target_mass;
+isterminal=1;
+direction=-1;
 end
