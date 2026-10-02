@@ -35,7 +35,8 @@ template=struct('name','','Isp_s',0,'thrust_N',0, ...
     'mp_kg',0,'ms_kg',0,'fs_struct',0,'CdA_m2',NaN, ...
     'reference_area_m2',NaN,'diameter_m',NaN, ...
     'drag_model','constant_cda','thrust_misalignment_rad',0, ...
-    'nose_cone',struct(),'pressure_nozzle',struct());
+    'nose_cone',struct(),'pressure_nozzle',struct(), ...
+    'constraint_limits',struct(),'constraint_control',struct(),'throttle',1);
 stages=repmat(template,1,N);
 
 for i=1:N
@@ -136,6 +137,15 @@ for i=1:N
     end
     if isfield(source,'pressure_nozzle') && isstruct(source.pressure_nozzle)
         stages(i).pressure_nozzle=source.pressure_nozzle;
+    end
+    if isfield(source,'constraint_limits') && isstruct(source.constraint_limits)
+        stages(i).constraint_limits=source.constraint_limits;
+    end
+    if isfield(source,'constraint_control') && isstruct(source.constraint_control)
+        stages(i).constraint_control=source.constraint_control;
+    end
+    if isfield(source,'throttle') && ~isempty(source.throttle)
+        stages(i).throttle=source.throttle;
     end
     if isfield(source,'thrust_misalignment_rad') && ...
             isfinite(source.thrust_misalignment_rad)
