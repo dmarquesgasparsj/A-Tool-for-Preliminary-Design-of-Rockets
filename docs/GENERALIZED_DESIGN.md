@@ -84,7 +84,7 @@ The **new MER aggregation is a modelling policy**, not a claim that an unfinishe
 | Liquid | Oxidizer and fuel tanks + avionics + thrust structure + engine |
 | Hybrid | Oxidizer tank + assumed fuel casing + avionics + thrust structure + engine |
 
-For liquid and hybrid stages, a separate nozzle mass is not added by default because the engine MER already depends on nozzle area ratio. Fairing and insulation are added when areas are supplied. The tank and casing coefficients are low-fidelity parametric estimates, especially for custom fuels. The separate nozzle rule and hybrid casing rule are modern choices requiring validation.
+For liquid and hybrid stages, a separate nozzle mass is not added by default because the engine MER already depends on nozzle area ratio. Fairing/insulation are supported, and the 2026 extension adds explicit fairing, interstage, payload-adapter and wiring geometry when configured. Per-stage reserve propellant and explicit dry-mass margins are also supported. The tank/casing coefficients remain low-fidelity parametric estimates, especially for custom fuels.
 
 ## Parallel boosters and the thesis "zeroth stage"
 
@@ -114,8 +114,7 @@ This is a **preliminary-design** tool. Implemented capabilities are intentionall
 
 - full trajectory coupling for parallel boosters/overlapping burns (mass/performance sizing is implemented);
 - historical closure of the Kn=5 -> staged TPBVP trajectory against Vega and Proton K;
-- stage skin thickness, interstage structure and full geometry;
-- engine throttle, multi-burn profiles and uncertainty margins;
+- flight-certified structural sizing, engine restart/multi-burn sequencing and full probabilistic uncertainty propagation;
 - automatic continuous Delta-V allocation (the discrete booster optimizer can search user-supplied allocations, but does not invent the missing historical 23-point Ariane sequence).
 
 The menu asks for orbit altitude and optional diameter because the mission configuration will be reused by the future full model. Until mass and trajectory are coupled, **orbit altitude is informational** and Delta-V is explicitly prescribed. A converged mass calculation is not evidence that an orbit is achievable.
