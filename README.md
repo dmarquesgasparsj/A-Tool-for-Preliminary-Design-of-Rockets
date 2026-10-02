@@ -55,29 +55,31 @@ The repository combines research from the 2014 thesis, recovered **unfinished de
 
 - staged 2D trajectory propagation;
 - independent extended atmosphere reconstruction to 2000 km with Mach/Reynolds/Knudsen diagnostics;
-- thesis Eq. (3.49) Mach-dependent drag coefficient and Appendix A nose-cone geometry;
+- thesis Eq. (3.49) Mach-dependent drag coefficient, Appendix A nose-cone geometry, and a 2026 shape-specific modified-Newtonian drag extension;
 - minimum-time TPBVP free-flight solver (`bvp4c`) and experimental Kn=5 hand-off with remaining serial-stage propulsion;
 - documented interstage coast phases and final-stage residual-propellant Delta-V feedback;
 - generalized parallel-booster ("zeroth stage") mass/performance sizing, discrete optimization and trajectory coupling;
+- configurable BATES, inhibited-core and end-burner solid-grain ballistics;
 - optional Chapter-5 stage geometry / exterior skin-mass model;
 - pressure-aware chamber/nozzle model with ambient-pressure thrust;
-- trajectory-constraint evaluation for max-q, heat flux, bending and axial acceleration;
+- calibrated multi-parameter engine-mass framework using thrust, chamber pressure, area ratio and O/F;
+- trajectory-constraint evaluation for max-q, heat flux, bending and axial acceleration, plus active preliminary throttle response;
 - inclined / air-launch initial conditions with backward-compatible ground-launch defaults;
 - GEO Hohmann transfer and interplanetary Hohmann / patched-conic mission analysis;
-- long-coast 3D orbital propagation with optional Earth J2;
-- deterministic thrust-misalignment model for 2D/3D directions;
+- long-coast 3D orbital propagation with optional Earth J2 and Sun/Moon third-body gravity;
+- deterministic thrust-misalignment model plus stochastic pointing-error Monte Carlo;
 - transparent parametric cost-estimating framework with learning curve;
 - Ariane 5 original/optimum benchmark fixtures;
 - stage mass accounting and separation events;
 - launcher configuration validation;
 - bounded trajectory-parameter search;
 - adaptive payload bracketing and bisection;
+- unified MATLAB GUI plus menu-independent APIs;
 - MATLAB regression tests.
 
 ### Original thesis components still being restored
 
 - final end-to-end validation of the modern structural-factor / MER loop against complete thesis launchers;
-- propellant database and stage-volume model;
 - complete fairing/interstage structural geometry beyond the implemented cylindrical stage/skin model;
 - historical Ariane 5 end-to-end closure of the implemented booster trajectory coupling;
 - historical Vega/Proton validation of the implemented Kn=5 phase switch and staged TPBVP free-flight phase;
@@ -95,14 +97,14 @@ For the **new integrated and generalized model**, open MATLAB in the repository 
 main
 ```
 
-Choose *Integrated mass + trajectory design (experimental)* for the serial mass/trajectory feedback loop, *Generalized serial-stage mass sizing* for mass-only serial design, *Parallel booster sizing / Ariane 5 benchmark* for the generalized "zeroth-stage" booster model, or *Mission / advanced extensions* for air-launch, GEO/interplanetary, J2 coast and cost studies. The booster menu includes the Ariane reference case, the reported 2014 optimum, and a custom N-booster builder. You can also bypass all menus entirely:
+Choose *Graphical design app (recommended)* for the unified GUI, *Integrated mass + trajectory design* for serial feedback, *Generalized serial-stage mass sizing* for mass-only design, *Parallel booster sizing / Ariane 5 benchmark* for the generalized "zeroth-stage" booster model, or *Mission / advanced extensions* for air-launch, orbital, grain-ballistics, perturbation and cost studies. The booster menu includes the Ariane reference case, the reported 2014 optimum, and a custom N-booster builder. You can also bypass all menus entirely:
 
 ```matlab
 cfg = general_launcher_preset('illustrative_two_stage');
 result = run_integrated_design(cfg);
 ```
 
-For custom serial missions, use `make_launcher_config(mission, stages)` with either `run_integrated_design(mission, stages)` or `run_thesis_sizing(mission, stages)`. For parallel boosters, build the documented booster configuration struct and call `run_parallel_booster_sizing(cfg)`; `ariane5_2014_parallel_config('reported_optimum')` is an example. Booster trajectory coupling is implemented experimentally, while historical Ariane end-to-end closure remains a validation milestone.
+For custom serial missions, use `make_launcher_config(mission, stages)` with either `run_integrated_design(mission, stages)` or `run_thesis_sizing(mission, stages)`. For parallel boosters, build the documented booster configuration struct and call `run_parallel_booster_sizing(cfg)`; `ariane5_2014_parallel_config('reported_optimum')` is an example. Booster trajectory coupling is implemented; historical Ariane end-to-end closure remains a validation/provenance milestone.
 
 The earlier simplified trajectory demonstration remains accessible from the *Existing trajectory demo* option in `main` or programmatically:
 
