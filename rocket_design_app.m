@@ -177,7 +177,14 @@ app.status=status;
             s=cfg.stages(ii);
             OF=s.mixture_ratio_OF;
             d=s.diameter_m; if ~isfinite(d), d=2; end
-            rows(ii,:)={s.name,s.propellant_name,s.propulsion_type, ...
+            pname=s.propellant_name;
+            if ~any(strcmpi(pname,{catalog.name}))
+                % Recovered development fixtures may contain historically
+                % named propellants not present in the 12-entry catalog.
+                % Rebuild them through the explicit custom-propellant path.
+                pname='custom';
+            end
+            rows(ii,:)={s.name,pname,s.propulsion_type, ...
                 s.Isp_s,100*s.delta_v_fraction,s.thrust_N/1000, ...
                 s.nozzle_area_ratio,d,OF};
         end
