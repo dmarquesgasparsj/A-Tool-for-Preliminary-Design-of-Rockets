@@ -86,6 +86,8 @@ The repository combines research from the 2014 thesis, recovered **unfinished de
 - quantitative closure of the `Delta-V` feedback against the surviving historical serial/parallel reference cases;
 - complete Vega, Proton K and Ariane 5 end-to-end agreement.
 
+Historical Vega/Proton/Ariane validation is closed as a reproducible forensic report: [`docs/VALIDATION_CLOSURE.md`](docs/VALIDATION_CLOSURE.md). The executable entry point is `run_validation_closure()`.
+
 See [`docs/THESIS_MODEL.md`](docs/THESIS_MODEL.md) for the 2014 architecture and [`docs/RECONSTRUCTION.md`](docs/RECONSTRUCTION.md) for the distinction between recovered thesis functionality and later maintenance. The implemented 2026 Future Work extensions and their provenance are documented in [`docs/FUTURE_WORK_EXTENSIONS.md`](docs/FUTURE_WORK_EXTENSIONS.md), with mission/economic/J2 additions in [`docs/MISSION_EXTENSIONS.md`](docs/MISSION_EXTENSIONS.md). The development sequence and the original thesis Future Work are tracked in [`ROADMAP.md`](ROADMAP.md), including which 2026 extensions are AI-assisted.
 
 ## Running the current code
