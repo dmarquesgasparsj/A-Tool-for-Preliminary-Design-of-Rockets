@@ -31,17 +31,25 @@ for i=1:N
         error('thesis_trajectory_config_from_mass_result:MissingDiameter', ...
             'Stage %d (%s) requires diameter_m for drag and Knudsen.',i,src.name);
     end
+    usable_mp=sized.mp_kg;
+    reserve_mp=0;
+    if isfield(sized,'usable_propellant_kg')
+        usable_mp=sized.usable_propellant_kg;
+    end
+    if isfield(sized,'reserve_propellant_kg')
+        reserve_mp=sized.reserve_propellant_kg;
+    end
     if isfield(src,'burn_time_s') && isfinite(src.burn_time_s) && src.burn_time_s>0
         tb=src.burn_time_s;
     else
         mdot=src.thrust_N/(src.Isp_s*opts.g0);
-        tb=sized.mp_kg/mdot;
+        tb=usable_mp/mdot;
     end
     stages(i).name=src.name;
     stages(i).Isp_s=src.Isp_s;
     stages(i).thrust_N=src.thrust_N;
-    stages(i).mp_kg=sized.mp_kg;
-    stages(i).ms_kg=sized.ms_kg;
+    stages(i).mp_kg=usable_mp;
+    stages(i).ms_kg=sized.ms_kg+reserve_mp;
     stages(i).burn_time_s=tb;
     stages(i).diameter_m=src.diameter_m;
 end
