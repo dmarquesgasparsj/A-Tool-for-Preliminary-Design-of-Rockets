@@ -58,10 +58,7 @@ v.reference=ref;
 % Thesis Table 6.4 internal reproduction.
 rmp=[ref.stages.mp_kg];
 rms=[ref.stages.ms_kg];
-rm0=[ref.stages(1).mp_kg+ref.stages(1).ms_kg + ...
-        sum([ref.stages(2:end).mp_kg])+sum([ref.stages(2:end).ms_kg])+ ...
-        ref.mission.payload_kg, ...
-     36734,10983,785];
+rm0=ref.reported.table6_4_reference_m0_kg;
 smp=ref.reported.table6_4_simulated_mp_kg;
 sms=ref.reported.table6_4_simulated_ms_kg;
 sm0=ref.reported.table6_4_simulated_m0_kg;
