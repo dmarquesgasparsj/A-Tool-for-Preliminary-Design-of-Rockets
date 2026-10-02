@@ -82,9 +82,8 @@ The reconstructed thesis model will continue to use **Kn=5 and last-stage radius
 
 Alternative interpretations remain available only as validation/sensitivity cases. No coefficient or threshold will be selected merely because it makes the result closer to 97.1 s.
 
-## Next validation work
+## Closure
 
-1. keep searching for or independently reconstruct the missing `RocketDynEq` implementation details;
-2. compare intermediate Vega velocity, altitude and flight-path-angle histories with Chapter 6 figures where numerical information can be extracted reliably;
-3. validate the three-phase TPBVP total flight time and last-stage propellant residual only after the atmospheric transition discrepancy is understood;
-4. repeat the same protocol for Proton K.
+The Vega investigation is now incorporated into the repository-wide [Validation Closure](VALIDATION_CLOSURE.md).
+
+The unresolved switch-time difference is classified as a **provenance gap / non-reproduction**. Searching for `RocketDynEq.m` or other final 2014 source remains worthwhile, but is no longer represented as unfinished implementation work. The public reconstruction intentionally retains **Kn=5 and last-stage radius** because that is the explicit dissertation specification; the closer `Kn=0.01` sensitivity case is evidence, not a replacement rule.
