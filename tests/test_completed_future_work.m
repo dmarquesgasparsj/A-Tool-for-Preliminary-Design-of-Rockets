@@ -136,3 +136,38 @@ end
 function testUnifiedGuiEntrypointExists(testCase)
 verifyEqual(testCase,exist('rocket_design_app','file'),2);
 end
+
+
+function testConstraintAwareThrottleRespondsToAxialLimit(testCase)
+env=earth_constants();
+stage=struct('thrust_N',500e3,'Isp_s',300,'CdA_m2',0, ...
+    'diameter_m',2);
+state=[env.Re;0;0;0;10000];
+aero=struct('pressure_Pa',101325,'dynamic_pressure_Pa',0, ...
+    'drag_N',0,'mach',0,'speed_of_sound_m_s',340,'rho_kg_m3',1.2);
+[u,d]=constraint_aware_throttle(aero,state,stage,env, ...
+    struct('max_axial_accel_g',2),struct('min_throttle',0.1));
+verifyLessThan(testCase,u,1);
+verifyGreaterThanOrEqual(testCase,u,0.1);
+verifyTrue(testCase,d.limited);
+end
+
+function testConstraintControlledStageBurnsToPropellantEvent(testCase)
+mission=struct('payload_kg',100,'delta_v_budget_m_s',1200, ...
+    'orbit_altitude_km',100);
+s=struct('name','S','propellant_name','HTPB/AP', ...
+    'delta_v_fraction',1,'thrust_N',150e3,'nozzle_area_ratio',12, ...
+    'diameter_m',1.5,'constraint_limits', ...
+    struct('max_axial_accel_g',3), ...
+    'constraint_control',struct('min_throttle',0.4));
+cfg=make_launcher_config(mission,s);
+mass=thesis_iterative_mass_model(cfg);
+tcfg=trajectory_config_from_mass_result(cfg,mass);
+m.target_alt=100e3; m.launch_lat=0;
+p=struct('t_pitch',5,'pitch_kick',deg2rad(1),'kick_dur',1);
+traj=simulate_gravity_turn(tcfg,m,p,mission.payload_kg);
+verifyEqual(testCase,traj.stage_events(1).mass_burnout_kg, ...
+    traj.m0-tcfg.stages(1).mp_kg,'RelTol',1e-10);
+verifyLessThanOrEqual(testCase,min(traj.throttle),1);
+verifyGreaterThanOrEqual(testCase,min(traj.throttle),0.4-1e-12);
+end
