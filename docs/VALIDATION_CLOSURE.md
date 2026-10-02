@@ -28,11 +28,11 @@ report = run_validation_closure(struct('print_summary',true));
 
 Chapter 6 Table 6.4 reports a Vega first-section reference mass of **132,530 kg** and a simulated value of **126,085 kg**. Applying thesis Eq. (6.1) gives approximately **4.86%**, consistent with the printed **4.8%** after table rounding.
 
-The stage propellant/structural deviations and the Table 6.5 length/volume deviations are now stored as machine-readable validation fixtures and re-evaluated in CI.
+The stage propellant/structural deviations and the Table 6.5 length/volume deviations are stored as machine-readable validation fixtures and re-evaluated in CI. Most reproduce Eq. (6.1) to the printed rounding, but the Stage-3 structural cell is an exception: 833 kg vs 906.2 kg gives about 8.79%, while Table 6.4 prints 8.1%. The repository preserves this as a published arithmetic/transcription anomaly rather than changing either source value.
 
 There is one explicit Table 6.4 convention ambiguity in the final AVUM `m0` cell. The printed component masses imply **692.2 kg** before payload; adding the 1,500 kg payload gives **2,192.2 kg**. The printed **11.8%** deviation is consistent with the no-payload convention. Both values are preserved and the ambiguous cell is excluded from the automatic table-rounding assertion.
 
-**Classification: verified thesis table, with one documented convention ambiguity.**
+**Classification: verified source transcription, with one arithmetic/transcription anomaly and one documented Stage-4 mass convention ambiguity.**
 
 ### Atmospheric trajectory
 
@@ -119,7 +119,7 @@ The thesis reports:
 - total flight time: **462.8 s**;
 - end of gravity turn: **111.5 s**, **120.4 km**, gamma **58.9 deg**.
 
-Tables 6.11 and 6.12 are machine-readable and their printed deviations are reproduced within rounding.
+Tables 6.11 and 6.12 are machine-readable. Table 6.11 mass deviations and Table 6.12 volume deviations reproduce Eq. (6.1) within printed rounding. Two Table 6.12 length cells do not: using the printed reference/simulated lengths gives about 78.49% for Stage 1 and 57.75% for Stage 2, while the table prints 44% and 36.6%, respectively. These are preserved as published table anomalies.
 
 ### Unrecoverable optimization path
 
@@ -149,9 +149,9 @@ That status is stronger and more reproducible than declaring success from manual
 
 | Case | Thesis tables | Atmospheric reconstruction | Full trajectory | Provenance |
 | --- | --- | --- | --- | --- |
-| Vega | Verified | Not reproduced | Not reproduced | Conflicting recovered development inputs |
+| Vega | Verified with published table anomaly | Not reproduced | Not reproduced | Conflicting recovered development inputs |
 | Proton K | Verified | Literal inputs cannot lift off; recovered inputs differ | Not reproduced | Table/source thrust, Isp, mass conventions conflict |
-| Ariane 5 | Verified optimization tables | Booster path implemented | Not reproduced end-to-end | Exact 23-point Delta-V path unavailable |
+| Ariane 5 | Verified with Table 6.12 length anomalies | Booster path implemented | Not reproduced end-to-end | Exact 23-point Delta-V path unavailable |
 
 These outcomes are regression-tested. If future source files are recovered, they can change a provenance classification only by supplying new evidence.
 
