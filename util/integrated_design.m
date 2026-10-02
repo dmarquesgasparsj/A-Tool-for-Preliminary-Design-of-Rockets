@@ -8,10 +8,10 @@ function result = integrated_design(cfg, opts)
 %   4) update the total Delta-V estimate;
 %   5) repeat until the Delta-V estimate changes by <= 0.01% by default.
 %
-% IMPORTANT: the current ascent propagator is still simplified. It does not
-% yet contain the full thesis Knudsen transition + TPBVP free-flight phase.
-% Therefore "Delta-V loop converged" and "target orbit reached" are separate
-% outputs. Do not interpret a converged loss budget as orbit validation.
+% IMPORTANT: this modern feedback loop deliberately uses the generalized 2D
+% ascent propagator. The separate thesis-reconstruction path implements the
+% Kn=5 hand-off and staged TPBVP. Delta-V convergence and orbit attainment
+% therefore remain separate diagnostics; neither is silently inferred.
 %
 % opts fields (all optional):
 %   delta_v_tolerance       default 1e-4 (0.01%)
@@ -172,7 +172,7 @@ result.orbit_reached=orbit.reached;
 result.fully_verified=result.converged && result.liftoff_margin_ok && ...
     result.orbit_reached;
 result.model_status=[ ...
-    'Mass/trajectory Delta-V feedback active using the current simplified ', ...
-    '2D gravity-turn propagator. Full thesis Knudsen/TPBVP trajectory, ', ...
-    'boosters and trajectory constraints remain to be restored.'];
+    'Generalized mass/trajectory Delta-V feedback using the modern 2D ', ...
+    'propagator. Historical Kn=5/TPBVP validation and parallel-booster ', ...
+    'trajectory paths are implemented separately to preserve provenance.'];
 end
