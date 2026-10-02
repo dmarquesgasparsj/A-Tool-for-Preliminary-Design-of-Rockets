@@ -17,6 +17,7 @@ ref.reported.max_q_altitude_approx_m = 9000;
 ref.reported.coast_time_s = [3 3 3];
 ref.reported.table6_4_reference_glow_kg = 132530;
 ref.reported.table6_4_simulated_glow_kg = 126085;
+ref.reported.table6_4_reference_m0_kg = [132530 36734 10983 785];
 ref.reported.table6_4_simulated_mp_kg = [83211.3 22918 8566.2 516.6];
 ref.reported.table6_4_simulated_ms_kg = [8595 2396.1 906.2 175.6];
 % The OCR/text extraction around the final m0 cell is internally ambiguous:
