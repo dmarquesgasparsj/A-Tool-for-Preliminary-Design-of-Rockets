@@ -103,6 +103,6 @@ Historical reference targets include:
 
 ## Modern extensions
 
-Modern capabilities can be implemented alongside historical recovery, provided that their physical assumptions are explicit and their results are validated rather than attributed to the unfinished 2014 source. The new generalized serial-stage model and menus are documented in [GENERALIZED_DESIGN.md](GENERALIZED_DESIGN.md). Possible examples are the same future-work directions already identified in the thesis: improved engine/nozzle modelling, trajectory constraints, aerodynamic improvements, cost modelling and additional missions.
+Modern capabilities can be implemented alongside historical recovery, provided that their physical assumptions are explicit and their results are validated rather than attributed to the unfinished 2014 source. The generalized design layer and the implemented 2026 Future Work extensions are documented in [GENERALIZED_DESIGN.md](GENERALIZED_DESIGN.md), [FUTURE_WORK_EXTENSIONS.md](FUTURE_WORK_EXTENSIONS.md) and [MISSION_EXTENSIONS.md](MISSION_EXTENSIONS.md).
 
 The goal is therefore not to freeze the code in 2014, but to preserve a clear boundary between **what was developed in the thesis** and **what was added later**.
